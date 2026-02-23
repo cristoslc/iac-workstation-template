@@ -1,6 +1,6 @@
-# iac-daily-driver-environments
+# ${REPO_NAME}
 
-IaC-driven setup that makes Linux and macOS dev workstations fungible. Run `./bootstrap.sh` on a fresh install or an existing system and get a fully configured development environment.
+IaC-driven setup that makes Linux and macOS dev workstations fungible. Run `./setup.sh` on a fresh install or an existing system and get a fully configured development environment.
 
 - **Linux**: Mint 22 / Cinnamon / X11
 - **macOS**: Homebrew + Raycast + opinionated defaults
@@ -10,12 +10,12 @@ IaC-driven setup that makes Linux and macOS dev workstations fungible. Run `./bo
 One-time setup to personalize the template and push to your own repo.
 
 ```bash
-git clone https://github.com/TEMPLATE_OWNER/iac-daily-driver-environments.git ~/.workstation
+git clone https://github.com/cristoslc/iac-workstation-template.git ~/.workstation
 cd ~/.workstation
-./first-run.sh
+./setup.sh
 ```
 
-The script self-installs its prerequisites (`age`, `sops`, `gum`, `gh`, `envsubst`, `pre-commit`) and walks you through:
+The Textual TUI walks you through:
 
 1. **Generate age keypair** — creates `~/.config/sops/age/keys.txt`
 2. **GitHub username + repo name** — personalizes clone URLs and config
@@ -42,7 +42,7 @@ cd ~/.workstation
 ./bootstrap.sh
 ```
 
-The bootstrap wizard (powered by [gum](https://github.com/charmbracelet/gum)) walks you through:
+The bootstrap wizard (Textual TUI) walks you through:
 
 1. **System type** — fresh install, existing system + new account, or existing system + existing account
 2. **Role groups** — which phases to apply (system, security, dev tools, desktop, dotfiles)
@@ -70,7 +70,8 @@ make check-collisions           # Verify no stow filename conflicts
 ## Architecture
 
 ```
-├── bootstrap.sh              OS dispatcher → platform bootstrap
+├── setup.sh                  Unified entry point (bash shim → uv run → Textual TUI)
+├── bootstrap.sh              Legacy OS dispatcher → platform bootstrap
 ├── Makefile                  Developer ergonomics (apply, lint, decrypt, status)
 ├── .sops.yaml                SOPS creation rules (age encryption)
 ├── .editorconfig             Editor formatting rules
@@ -234,7 +235,7 @@ See [docs/secrets.md](docs/secrets.md) for setup, key distribution, and rotation
 | Shell | zsh | Default on macOS, widely supported on Linux |
 | Python | uv | Fast, replaces pip + pyenv + virtualenv |
 | Node | fnm | Fast, rust-based, cross-platform |
-| Bootstrap UX | gum | Single binary, no dependencies, beautiful TUI |
+| Bootstrap UX | Textual TUI | Python-based, unified first-run + bootstrap flow via `setup.sh` |
 | Ansible install | uv tool install | Avoids stale distro packages |
 | Supply chain | Pinned versions + SHA-256 checksums | All binary downloads verified via `download-and-verify.yml`; apt repos use GPG keys |
 | Secret scanning | gitleaks + SOPS MAC check | Two-layer pre-commit: pattern-based scanner + encryption verification |
