@@ -1,0 +1,16 @@
+---
+- name: "Trackpad: Enable tap to click"
+  community.general.osx_defaults:
+    domain: com.apple.AppleMultitouchTrackpad
+    key: Clicking
+    type: bool
+    value: true
+    state: present
+
+- name: "Trackpad: Tracking speed"
+  community.general.osx_defaults:
+    domain: NSGlobalDomain
+    key: com.apple.trackpad.scaling
+    type: float
+    value: "{{ trackpad_speed }}"
+    state: present

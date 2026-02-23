@@ -1,0 +1,9 @@
+---
+# macOS: Install Nerd Fonts via Homebrew casks.
+# Font casks are in the main homebrew-cask tap (no separate tap needed since 2023).
+
+- name: Install Nerd Fonts (macOS)
+  community.general.homebrew_cask:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ nerd_font_casks }}"

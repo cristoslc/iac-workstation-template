@@ -1,0 +1,63 @@
+---
+# Desktop environment role: Cinnamon keyboard shortcuts via dconf.
+# These map to Vicinae deeplinks for direct access to specific extensions.
+
+- name: Set Vicinae clipboard shortcut (Super+V)
+  community.general.dconf:
+    key: "/org/cinnamon/desktop/keybindings/custom-keybindings/custom0/binding"
+    value: "['<Super>v']"
+    state: present
+
+- name: Set Vicinae clipboard command
+  community.general.dconf:
+    key: "/org/cinnamon/desktop/keybindings/custom-keybindings/custom0/command"
+    value: "'xdg-open vicinae://extensions/vicinae/clipboard/history'"
+    state: present
+
+- name: Set Vicinae clipboard shortcut name
+  community.general.dconf:
+    key: "/org/cinnamon/desktop/keybindings/custom-keybindings/custom0/name"
+    value: "'Clipboard History'"
+    state: present
+
+- name: Set Vicinae emoji shortcut (Super+E)
+  community.general.dconf:
+    key: "/org/cinnamon/desktop/keybindings/custom-keybindings/custom1/binding"
+    value: "['<Super>e']"
+    state: present
+
+- name: Set Vicinae emoji command
+  community.general.dconf:
+    key: "/org/cinnamon/desktop/keybindings/custom-keybindings/custom1/command"
+    value: "'xdg-open vicinae://extensions/vicinae/emoji'"
+    state: present
+
+- name: Set Vicinae emoji shortcut name
+  community.general.dconf:
+    key: "/org/cinnamon/desktop/keybindings/custom-keybindings/custom1/name"
+    value: "'Emoji Picker'"
+    state: present
+
+- name: Set Vicinae launcher shortcut (Super+Space)
+  community.general.dconf:
+    key: "/org/cinnamon/desktop/keybindings/custom-keybindings/custom2/binding"
+    value: "['<Super>space']"
+    state: present
+
+- name: Set Vicinae launcher command
+  community.general.dconf:
+    key: "/org/cinnamon/desktop/keybindings/custom-keybindings/custom2/command"
+    value: "'vicinae toggle'"
+    state: present
+
+- name: Set Vicinae launcher shortcut name
+  community.general.dconf:
+    key: "/org/cinnamon/desktop/keybindings/custom-keybindings/custom2/name"
+    value: "'Vicinae Launcher'"
+    state: present
+
+- name: Register custom keybindings list
+  community.general.dconf:
+    key: "/org/cinnamon/desktop/keybindings/custom-list"
+    value: "['custom0', 'custom1', 'custom2']"
+    state: present

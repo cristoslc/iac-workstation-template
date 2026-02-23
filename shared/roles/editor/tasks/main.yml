@@ -1,0 +1,57 @@
+---
+# Editor role: VS Code installation and extensions
+
+- name: Install VS Code (macOS)
+  when: ansible_facts.os_family == "Darwin"
+  community.general.homebrew_cask:
+    name: visual-studio-code
+    state: present
+
+- name: Install VS Code (Debian)
+  when: ansible_facts.os_family == "Debian"
+  block:
+    - name: Check if Microsoft keyring exists
+      ansible.builtin.stat:
+        path: /usr/share/keyrings/microsoft.gpg
+      register: _microsoft_keyring
+
+    - name: Install Microsoft GPG key
+      when: not _microsoft_keyring.stat.exists
+      block:
+        - name: Download Microsoft GPG key
+          ansible.builtin.get_url:
+            url: https://packages.microsoft.com/keys/microsoft.asc
+            dest: /tmp/microsoft-key.asc
+            mode: "0644"
+          become: true
+
+        - name: Dearmor Microsoft GPG key
+          ansible.builtin.command: gpg --batch --yes --dearmor -o /usr/share/keyrings/microsoft.gpg /tmp/microsoft-key.asc
+          become: true
+
+        - name: Clean up Microsoft key temp file
+          ansible.builtin.file:
+            path: /tmp/microsoft-key.asc
+            state: absent
+          become: true
+
+    - name: Add VS Code repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main"
+        filename: vscode
+        state: present
+      become: true
+
+    - name: Install VS Code
+      ansible.builtin.apt:
+        name: code
+        state: present
+        update_cache: true
+      become: true
+
+- name: Install VS Code extensions
+  ansible.builtin.command: "code --install-extension {{ item }}"
+  loop: "{{ lookup('file', role_path + '/files/extensions.txt').splitlines() | select | list }}"
+  register: ext_result
+  changed_when: "'was successfully installed' in ext_result.stdout"
+  failed_when: false

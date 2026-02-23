@@ -1,0 +1,10 @@
+---
+# Link Handler role: OpenIn (macOS) + xdg-mime (Linux)
+
+- name: Install OpenIn
+  ansible.builtin.include_tasks: openin.yml
+  tags: [openin]
+
+- name: Configure MIME associations
+  ansible.builtin.include_tasks: xdg-mime.yml
+  tags: [xdg-mime]

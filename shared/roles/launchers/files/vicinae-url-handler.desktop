@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Vicinae URL Handler
+Exec=xdg-open %u
+Type=Application
+MimeType=x-scheme-handler/vicinae
+NoDisplay=true

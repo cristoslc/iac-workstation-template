@@ -1,0 +1,17 @@
+---
+# Timeshift sub-task (Debian only)
+- name: Install Timeshift (Debian)
+  when: ansible_facts.os_family == "Debian"
+  block:
+    - name: Install Timeshift
+      ansible.builtin.apt:
+        name: timeshift
+        state: present
+      become: true
+
+    - name: Configure Timeshift
+      ansible.builtin.template:
+        src: timeshift.json.j2
+        dest: /etc/timeshift/timeshift.json
+        mode: "0644"
+      become: true

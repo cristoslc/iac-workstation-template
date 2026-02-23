@@ -1,0 +1,17 @@
+---
+# Raycast sub-task (macOS only — installed via Brewfile)
+- name: Install Raycast (macOS)
+  when: ansible_facts.os_family == "Darwin"
+  block:
+    - name: Check if Raycast settings export exists
+      ansible.builtin.stat:
+        path: "{{ workstation_dir }}/macos/dotfiles/raycast/.config/raycast/settings.json"
+      register: raycast_settings
+
+    - name: Note about Raycast configuration
+      ansible.builtin.debug:
+        msg: >
+          Raycast is installed. Configure it manually:
+          - Set as default launcher
+          - Configure clipboard history, snippets, window management
+          - Export settings to macos/dotfiles/raycast/.config/raycast/ for future bootstraps

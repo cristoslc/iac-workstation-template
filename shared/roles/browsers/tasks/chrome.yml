@@ -1,0 +1,57 @@
+---
+# Google Chrome sub-task
+- name: Install Chrome (macOS)
+  when: ansible_facts.os_family == "Darwin"
+  block:
+    - name: Verify Chrome is installed
+      ansible.builtin.command: brew list --cask google-chrome
+      register: chrome_check
+      changed_when: false
+      failed_when: false
+
+    - name: Note about Chrome
+      when: chrome_check.rc != 0
+      ansible.builtin.debug:
+        msg: "Chrome not installed. Add 'google-chrome' to Brewfile and run brew bundle."
+
+- name: Install Chrome (Debian)
+  when: ansible_facts.os_family == "Debian"
+  block:
+    - name: Check if Chrome keyring exists
+      ansible.builtin.stat:
+        path: /usr/share/keyrings/google-chrome-keyring.gpg
+      register: _chrome_keyring
+
+    - name: Install Google Chrome GPG key
+      when: not _chrome_keyring.stat.exists
+      block:
+        - name: Download Google Chrome GPG key
+          ansible.builtin.get_url:
+            url: https://dl.google.com/linux/linux_signing_key.pub
+            dest: /tmp/google-chrome-key.pub
+            mode: "0644"
+          become: true
+
+        - name: Dearmor Google Chrome GPG key
+          ansible.builtin.command: gpg --batch --yes --dearmor -o /usr/share/keyrings/google-chrome-keyring.gpg /tmp/google-chrome-key.pub
+          become: true
+
+        - name: Clean up Chrome key temp file
+          ansible.builtin.file:
+            path: /tmp/google-chrome-key.pub
+            state: absent
+          become: true
+
+    - name: Add Google Chrome apt repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] https://dl.google.com/linux/chrome/deb/ stable main"
+        filename: google-chrome
+        state: present
+      become: true
+
+    - name: Install Google Chrome
+      ansible.builtin.apt:
+        name: google-chrome-stable
+        state: present
+        update_cache: true
+      become: true

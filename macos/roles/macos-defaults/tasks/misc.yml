@@ -1,0 +1,32 @@
+---
+- name: "Misc: Expand save panel by default"
+  community.general.osx_defaults:
+    domain: NSGlobalDomain
+    key: NSNavPanelExpandedStateForSaveMode
+    type: bool
+    value: true
+    state: present
+
+- name: "Misc: Expand save panel by default (2)"
+  community.general.osx_defaults:
+    domain: NSGlobalDomain
+    key: NSNavPanelExpandedStateForSaveMode2
+    type: bool
+    value: true
+    state: present
+
+- name: "Misc: Disable .DS_Store on network volumes"
+  community.general.osx_defaults:
+    domain: com.apple.desktopservices
+    key: DSDontWriteNetworkStores
+    type: bool
+    value: true
+    state: present
+
+- name: "Misc: Disable .DS_Store on USB volumes"
+  community.general.osx_defaults:
+    domain: com.apple.desktopservices
+    key: DSDontWriteUSBStores
+    type: bool
+    value: true
+    state: present

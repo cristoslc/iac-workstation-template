@@ -1,0 +1,32 @@
+---
+- name: "Phase 2: Development tools"
+  hosts: localhost
+  connection: local
+
+  roles:
+    - role: git
+      tags: [git, gh, lazygit, delta, dev-tools]
+
+    - role: shell
+      tags: [shell, zsh, direnv, dev-tools]
+
+    - role: python
+      tags: [python, dev-tools]
+
+    - role: node
+      tags: [node, dev-tools]
+
+    - role: docker
+      tags: [docker, dev-tools]
+
+    - role: editor
+      tags: [editor, vscode, dev-tools]
+
+    - role: claude-code
+      tags: [claude-code, dev-tools]
+
+    - role: fonts
+      tags: [fonts, dev-tools]
+
+    - role: terminal
+      tags: [terminal, tmux, dev-tools]

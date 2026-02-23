@@ -1,0 +1,116 @@
+# Declarative manifest of all macOS packages.
+# Run: brew bundle --file=Brewfile
+#
+# Comments map each entry to its Ansible role for traceability.
+
+# Taps
+tap "homebrew/bundle"
+
+# --- Git (role: git) ---
+brew "git"
+brew "gh"
+brew "lazygit"
+brew "delta"
+
+# --- Shell (role: shell) ---
+brew "zsh"
+brew "direnv"
+
+# --- Terminal (role: terminal) ---
+brew "tmux"
+
+# --- Base CLI (role: homebrew — no shared role equivalent) ---
+brew "jq"
+brew "wget"
+brew "ripgrep"
+brew "fd"
+brew "fzf"
+brew "bat"
+brew "eza"
+brew "tree"
+brew "htop"
+brew "dust"
+brew "duf"
+brew "tldr"
+brew "mc"
+
+# --- Secrets / IaC (role: secrets-manager + stow) ---
+brew "stow"
+brew "sops"
+brew "age"
+brew "gum"
+brew "mas"
+
+# --- Secrets Manager (role: secrets-manager) ---
+cask "1password"
+cask "1password-cli"
+
+# --- Browsers (role: browsers) ---
+cask "firefox"
+cask "brave-browser"
+cask "google-chrome"
+
+# --- Editor (role: editor) ---
+cask "visual-studio-code"
+
+# --- Docker (role: docker) ---
+cask "docker"
+
+# --- Terminal (role: terminal) ---
+cask "iterm2"
+
+# --- Setapp (manages: Dato, BusyCal, CleanShot X, Downie, OpenIn, Paletro) ---
+cask "setapp"
+
+# --- Launchers (role: launchers) ---
+cask "raycast"
+# Also: Paletro (Setapp)
+
+# --- Communication (role: communication) ---
+cask "slack"
+cask "signal"
+
+# --- Calendar (role: calendar) ---
+# Dato (Setapp)
+# BusyCal (Setapp)
+
+# --- Media (role: media) ---
+cask "spotify"
+cask "vlc"
+# Also: Downie (Setapp)
+
+# --- Screenshots (role: screenshots) ---
+# CleanShot X (Setapp)
+
+# --- Link Handler (role: link-handler) ---
+# OpenIn (Setapp)
+
+# --- Text Expansion (role: text-expansion) ---
+cask "espanso"
+
+# --- Stream Deck (role: stream-deck) ---
+cask "elgato-stream-deck"
+
+# --- Utilities (role: utilities) ---
+cask "keka"
+
+# --- Backups (role: backups) ---
+cask "backblaze"
+
+# --- VPN (role: vpn) ---
+cask "surfshark"
+cask "tailscale"
+
+# --- File Transfer (role: file-transfer) ---
+cask "cyberduck"
+
+# --- Fonts (role: fonts) ---
+cask "font-jetbrains-mono-nerd-font"
+cask "font-fira-code-nerd-font"
+cask "font-meslo-lg-nerd-font"
+
+# --- AI (role: claude-code) ---
+cask "claude"
+
+# --- Mac App Store (role: mas) ---
+mas "Amphetamine", id: 937984704

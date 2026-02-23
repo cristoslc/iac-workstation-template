@@ -1,0 +1,30 @@
+---
+- name: Check if mas is installed
+  ansible.builtin.command: mas version
+  register: mas_check
+  changed_when: false
+  failed_when: false
+
+- name: Check if signed into App Store
+  when: mas_check.rc == 0
+  ansible.builtin.command: mas account
+  register: mas_account
+  changed_when: false
+  failed_when: false
+
+- name: Warn if not signed into App Store
+  when: mas_check.rc == 0 and (mas_account.rc | default(1)) != 0
+  ansible.builtin.debug:
+    msg: >
+      Not signed into the Mac App Store — skipping App Store installs.
+      Sign in via App Store.app, then re-run: make apply ROLE=mas
+
+- name: Install Mac App Store apps
+  when: mas_check.rc == 0 and (mas_account.rc | default(1)) == 0
+  ansible.builtin.command: "mas install {{ item.id }}"
+  loop: "{{ mas_apps }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: mas_result
+  changed_when: "'Installed' in mas_result.stdout"
+  failed_when: false

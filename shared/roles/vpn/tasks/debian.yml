@@ -1,0 +1,56 @@
+---
+# Linux: install Tailscale and Surfshark via their repos.
+
+- name: Download Tailscale GPG key
+  ansible.builtin.get_url:
+    url: https://pkgs.tailscale.com/stable/ubuntu/noble.noarmor.gpg
+    dest: /usr/share/keyrings/tailscale-archive-keyring.gpg
+    mode: "0644"
+  become: true
+
+- name: Detect Ubuntu base codename
+  ansible.builtin.shell:
+    cmd: . /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}"
+  register: _ubuntu_codename
+  changed_when: false
+
+- name: Add Tailscale apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/tailscale-archive-keyring.gpg] https://pkgs.tailscale.com/stable/ubuntu {{ _ubuntu_codename.stdout }} main"
+    filename: tailscale
+    state: present
+  become: true
+
+- name: Install Tailscale
+  ansible.builtin.apt:
+    name: tailscale
+    state: present
+    update_cache: true
+  become: true
+
+- name: Install Surfshark GPG key
+  ansible.builtin.copy:
+    src: surfshark.asc
+    dest: /etc/apt/trusted.gpg.d/surfshark.asc
+    mode: "0644"
+  become: true
+
+- name: Add Surfshark apt repository
+  ansible.builtin.apt_repository:
+    repo: "{{ surfshark_apt_repo }}"
+    filename: surfshark
+    state: present
+  become: true
+
+- name: Remove legacy surfshark-release package
+  ansible.builtin.apt:
+    name: surfshark-release
+    state: absent
+  become: true
+
+- name: Install Surfshark
+  ansible.builtin.apt:
+    name: surfshark
+    state: present
+    update_cache: true
+  become: true

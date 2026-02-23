@@ -1,0 +1,77 @@
+---
+# SOPS/age sub-task: resolve age key and decrypt secret dotfiles.
+# sops and age are installed by bootstrap.sh, not this role.
+
+- name: Check for age key
+  ansible.builtin.stat:
+    path: "{{ age_keyfile }}"
+  register: age_key_stat
+
+- name: Try retrieving age key from 1Password
+  when: not age_key_stat.stat.exists
+  block:
+    - name: Check if 1Password CLI is available
+      ansible.builtin.command: op --version
+      register: op_check
+      changed_when: false
+      failed_when: false
+
+    - name: Retrieve age key from 1Password
+      when: op_check.rc == 0
+      ansible.builtin.shell: |
+        mkdir -p -m 700 "$(dirname '{{ age_keyfile }}')"
+        op read "{{ onepassword_age_key_ref }}" > "{{ age_keyfile }}"
+      args:
+        creates: "{{ age_keyfile }}"
+      register: op_read_result
+      failed_when: false
+      no_log: true
+
+    - name: Warn if 1Password retrieval failed
+      when:
+        - op_check.rc == 0
+        - op_read_result is defined
+        - op_read_result.rc != 0
+      ansible.builtin.debug:
+        msg: >
+          1Password CLI is installed but failed to retrieve the age key.
+          Ensure the 1Password desktop app is running and unlocked,
+          and that {{ onepassword_age_key_ref }} exists in your vault.
+
+- name: Set age key permissions
+  ansible.builtin.file:
+    path: "{{ age_keyfile }}"
+    mode: "0600"
+  when: age_key_stat.stat.exists or (op_check is defined and op_check.rc == 0)
+
+- name: Set age key directory permissions
+  ansible.builtin.file:
+    path: "{{ age_keyfile | dirname }}"
+    mode: "0700"
+  when: age_key_stat.stat.exists or (op_check is defined and op_check.rc == 0)
+
+- name: Refresh age key status
+  ansible.builtin.stat:
+    path: "{{ age_keyfile }}"
+  register: age_key_final
+
+- name: Decrypt shared secret dotfiles
+  when: age_key_final.stat.exists
+  ansible.builtin.include_tasks: decrypt-tree.yml
+  vars:
+    secrets_source: "{{ workstation_dir }}/shared/secrets/dotfiles"
+    secrets_target: "{{ workstation_dir }}/shared/secrets/.decrypted/dotfiles"
+
+- name: Decrypt platform secret dotfiles
+  when: age_key_final.stat.exists
+  ansible.builtin.include_tasks: decrypt-tree.yml
+  vars:
+    secrets_source: "{{ workstation_dir }}/{{ platform_dir }}/secrets/dotfiles"
+    secrets_target: "{{ workstation_dir }}/{{ platform_dir }}/secrets/.decrypted/dotfiles"
+
+- name: Warn if no age key available
+  when: not age_key_final.stat.exists
+  ansible.builtin.debug:
+    msg: >
+      Age key not found. Secret dotfiles will not be decrypted.
+      Place your key at {{ age_keyfile }} and re-run bootstrap.

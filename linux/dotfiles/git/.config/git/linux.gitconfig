@@ -1,0 +1,5 @@
+# Linux-specific git config — included by .gitconfig via local.gitconfig.
+# 1Password SSH commit signing on Linux.
+
+[gpg "ssh"]
+  program = /opt/1Password/op-ssh-sign

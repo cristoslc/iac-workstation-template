@@ -1,0 +1,5 @@
+---
+# Fonts role: developer Nerd Fonts on both platforms.
+
+- name: Include OS-specific tasks
+  ansible.builtin.include_tasks: "{{ ansible_facts.os_family | lower }}.yml"

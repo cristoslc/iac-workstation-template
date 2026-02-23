@@ -1,0 +1,50 @@
+---
+# Slack sub-task
+- name: Install Slack (macOS)
+  when: ansible_facts.os_family == "Darwin"
+  block:
+    - name: Verify Slack is installed
+      ansible.builtin.command: brew list --cask slack
+      register: slack_check
+      changed_when: false
+      failed_when: false
+
+    - name: Note about Slack
+      when: slack_check.rc != 0
+      ansible.builtin.debug:
+        msg: "Slack not installed. Add 'slack' to Brewfile and run brew bundle."
+
+- name: Install Slack (Debian)
+  when: ansible_facts.os_family == "Debian"
+  block:
+    - name: Check installed Slack version
+      ansible.builtin.command: dpkg-query -W -f='${Version}' slack-desktop
+      register: slack_installed
+      changed_when: false
+      failed_when: false
+
+    - name: Download and install Slack
+      when: slack_installed.rc != 0 or slack_installed.stdout != slack_version
+      block:
+        - name: Create temp file for Slack download
+          ansible.builtin.tempfile:
+            suffix: .deb
+          register: slack_tmp
+
+        - name: Download Slack .deb
+          ansible.builtin.get_url:
+            url: "{{ slack_url }}"
+            dest: "{{ slack_tmp.path }}"
+            checksum: "sha256:{{ slack_sha256 }}"
+            mode: "0644"
+
+        - name: Install Slack .deb
+          ansible.builtin.apt:
+            deb: "{{ slack_tmp.path }}"
+            state: present
+          become: true
+
+        - name: Clean up Slack temp file
+          ansible.builtin.file:
+            path: "{{ slack_tmp.path }}"
+            state: absent

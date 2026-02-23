@@ -1,0 +1,6 @@
+---
+# Text Expansion role: Espanso
+
+- name: Install Espanso
+  ansible.builtin.include_tasks: espanso.yml
+  tags: [espanso]

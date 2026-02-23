@@ -1,0 +1,46 @@
+---
+# zsh sub-task
+- name: Install zsh (macOS)
+  when: ansible_facts.os_family == "Darwin"
+  block:
+    - name: Install zsh via Homebrew
+      community.general.homebrew:
+        name: zsh
+        state: present
+
+    - name: Set zsh path fact
+      ansible.builtin.set_fact:
+        zsh_path: /opt/homebrew/bin/zsh
+
+    - name: Add Homebrew zsh to /etc/shells
+      ansible.builtin.lineinfile:
+        path: /etc/shells
+        line: /opt/homebrew/bin/zsh
+        state: present
+      become: true
+
+- name: Install zsh (Debian)
+  when: ansible_facts.os_family == "Debian"
+  block:
+    - name: Install zsh
+      ansible.builtin.apt:
+        name: zsh
+        state: present
+      become: true
+
+    - name: Set zsh path fact
+      ansible.builtin.set_fact:
+        zsh_path: /usr/bin/zsh
+
+- name: Set zsh as default shell
+  ansible.builtin.user:
+    name: "{{ ansible_facts.user_id }}"
+    shell: "{{ zsh_path }}"
+  become: true
+
+- name: Create zsh config directory with verified ownership
+  ansible.builtin.file:
+    path: "{{ ansible_facts.env.HOME }}/.config/zsh"
+    state: directory
+    owner: "{{ ansible_facts.user_id }}"
+    mode: "0755"

@@ -1,0 +1,8 @@
+---
+# Surfshark apt repo configuration (Linux).
+# The GPG key is embedded as a file rather than fetched at runtime to avoid
+# a TOFU (trust-on-first-use) dependency on Surfshark's download server.
+# To refresh: curl -fsSL https://downloads.surfshark.com/linux/debian-install.sh
+# and extract the PGP key block.
+
+surfshark_apt_repo: "deb [signed-by=/etc/apt/trusted.gpg.d/surfshark.asc arch=amd64,arm64] https://ocean.surfshark.com/debian stretch main"

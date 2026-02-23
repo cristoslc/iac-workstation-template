@@ -1,0 +1,40 @@
+---
+# Brave browser sub-task
+- name: Install Brave (macOS)
+  when: ansible_facts.os_family == "Darwin"
+  block:
+    - name: Verify Brave is installed
+      ansible.builtin.command: brew list --cask brave-browser
+      register: brave_check
+      changed_when: false
+      failed_when: false
+
+    - name: Note about Brave
+      when: brave_check.rc != 0
+      ansible.builtin.debug:
+        msg: "Brave not installed. Add 'brave-browser' to Brewfile and run brew bundle."
+
+- name: Install Brave (Debian)
+  when: ansible_facts.os_family == "Debian"
+  block:
+    # Brave key is already in gpg binary format — download directly to keyrings
+    - name: Download Brave browser GPG key
+      ansible.builtin.get_url:
+        url: https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+        dest: /usr/share/keyrings/brave-browser-archive-keyring.gpg
+        mode: "0644"
+      become: true
+
+    - name: Add Brave browser apt repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main"
+        filename: brave-browser
+        state: present
+      become: true
+
+    - name: Install Brave browser
+      ansible.builtin.apt:
+        name: brave-browser
+        state: present
+        update_cache: true
+      become: true

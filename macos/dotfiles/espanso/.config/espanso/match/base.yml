@@ -1,0 +1,4 @@
+# Base espanso text expansions.
+# Private snippets go in match/private.yml (encrypted, managed via secrets).
+# Local snippets go in match/local.yml (gitignored).
+matches: []

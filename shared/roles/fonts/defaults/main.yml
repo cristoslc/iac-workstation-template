@@ -1,0 +1,27 @@
+---
+# Nerd Fonts to install.
+
+# Pinned version for Linux downloads (GitHub release tag).
+# Update checksums when bumping version:
+#   for font in JetBrainsMono FiraCode Meslo; do
+#     curl -fsSL "https://github.com/ryanoasis/nerd-fonts/releases/download/v${version}/${font}.zip" | sha256sum
+#   done
+nerd_fonts_version: "3.3.0"
+
+# macOS: Homebrew cask names
+nerd_font_casks:
+  - font-jetbrains-mono-nerd-font
+  - font-fira-code-nerd-font
+  - font-meslo-lg-nerd-font
+
+# Linux: GitHub release archive names + SHA-256 checksums
+nerd_fonts:
+  - name: JetBrainsMono
+    sha256: "2d83782a350b604bfa70fce880604a41a7f77c3eec8f922f9cdc3c20952ddbe4"
+  - name: FiraCode
+    sha256: "89978e6f870d044286a339161d5ed961569744b1cd2afee62337fa140cd0b397"
+  - name: Meslo
+    sha256: "322d3a72da704b75cce5e52a6c3b875cbff3ca5ad01b40d0e2ad2f65be21648e"
+
+# Legacy list for backward compat (used by darwin.yml which doesn't need checksums)
+nerd_font_names: "{{ nerd_fonts | map(attribute='name') | list }}"

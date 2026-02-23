@@ -1,0 +1,6 @@
+---
+- name: Install GNU Stow
+  ansible.builtin.apt:
+    name: stow
+    state: present
+  become: true

@@ -1,0 +1,3 @@
+---
+# Docker Desktop manages its own daemon lifecycle.
+# No handlers needed.

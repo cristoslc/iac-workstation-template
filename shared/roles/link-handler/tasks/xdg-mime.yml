@@ -1,0 +1,33 @@
+---
+# xdg-mime sub-task (Debian only — configure default applications)
+- name: Configure MIME associations (Debian)
+  when: ansible_facts.os_family == "Debian"
+  block:
+    - name: Set default web browser
+      ansible.builtin.command: "xdg-settings set default-web-browser {{ default_browser | default('firefox.desktop') }}"
+      register: _xdg_browser
+      changed_when: false
+      failed_when: _xdg_browser.rc != 0
+
+    - name: Set default MIME type associations
+      ansible.builtin.command: "xdg-mime default {{ item.desktop }} {{ item.mime }}"
+      loop:
+        - {mime: "x-scheme-handler/http", desktop: "{{ default_browser | default('firefox.desktop') }}"}
+        - {mime: "x-scheme-handler/https", desktop: "{{ default_browser | default('firefox.desktop') }}"}
+        - {mime: "text/html", desktop: "{{ default_browser | default('firefox.desktop') }}"}
+        - {mime: "application/pdf", desktop: "{{ pdf_handler | default('firefox.desktop') }}"}
+        - {mime: "image/png", desktop: "{{ image_handler | default('eog.desktop') }}"}
+        - {mime: "image/jpeg", desktop: "{{ image_handler | default('eog.desktop') }}"}
+        - {mime: "video/mp4", desktop: "{{ video_handler | default('vlc.desktop') }}"}
+        - {mime: "video/x-matroska", desktop: "{{ video_handler | default('vlc.desktop') }}"}
+        - {mime: "audio/mpeg", desktop: "{{ audio_handler | default('vlc.desktop') }}"}
+      changed_when: false
+
+    - name: Verify default browser is set correctly
+      ansible.builtin.command: xdg-settings get default-web-browser
+      register: _browser_verify
+      changed_when: false
+
+    - name: Report current default browser
+      ansible.builtin.debug:
+        msg: "Default browser is: {{ _browser_verify.stdout }}"

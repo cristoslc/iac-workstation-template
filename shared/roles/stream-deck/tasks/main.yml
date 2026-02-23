@@ -1,0 +1,7 @@
+---
+# Stream Deck role: companion software for Elgato Stream Deck hardware.
+# macOS: official Elgato Stream Deck app via Brewfile.
+# Linux: OpenDeck (supports original Elgato plugin SDK).
+
+- name: Include OS-specific tasks
+  ansible.builtin.include_tasks: "{{ ansible_facts.os_family | lower }}.yml"

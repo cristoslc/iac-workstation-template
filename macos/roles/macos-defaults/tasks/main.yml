@@ -1,0 +1,27 @@
+---
+# macOS system preferences via `defaults write`.
+# In existing_account mode, shows diffs and confirms before applying.
+
+- name: Include Dock defaults
+  ansible.builtin.include_tasks: dock.yml
+  tags: [macos-defaults]
+
+- name: Include Finder defaults
+  ansible.builtin.include_tasks: finder.yml
+  tags: [macos-defaults]
+
+- name: Include keyboard defaults
+  ansible.builtin.include_tasks: keyboard.yml
+  tags: [macos-defaults]
+
+- name: Include trackpad defaults
+  ansible.builtin.include_tasks: trackpad.yml
+  tags: [macos-defaults]
+
+- name: Include screenshot defaults
+  ansible.builtin.include_tasks: screenshots.yml
+  tags: [macos-defaults]
+
+- name: Include misc defaults
+  ansible.builtin.include_tasks: misc.yml
+  tags: [macos-defaults]

@@ -1,0 +1,10 @@
+---
+# Communication role: Slack + Signal
+
+- name: Install Slack
+  ansible.builtin.include_tasks: slack.yml
+  tags: [slack]
+
+- name: Install Signal
+  ansible.builtin.include_tasks: signal.yml
+  tags: [signal]

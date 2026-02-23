@@ -1,0 +1,27 @@
+---
+- name: "Dock: Auto-hide"
+  community.general.osx_defaults:
+    domain: com.apple.dock
+    key: autohide
+    type: bool
+    value: "{{ dock_autohide }}"
+    state: present
+  notify: restart dock
+
+- name: "Dock: Icon size"
+  community.general.osx_defaults:
+    domain: com.apple.dock
+    key: tilesize
+    type: float
+    value: "{{ dock_tilesize }}"
+    state: present
+  notify: restart dock
+
+- name: "Dock: Minimize effect"
+  community.general.osx_defaults:
+    domain: com.apple.dock
+    key: mineffect
+    type: string
+    value: "{{ dock_mineffect }}"
+    state: present
+  notify: restart dock

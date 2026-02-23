@@ -1,0 +1,37 @@
+# Decrypted secrets (created at bootstrap time, never committed)
+.decrypted/
+*.decrypted
+
+# Age private keys
+keys.txt
+*.age-key
+
+# Logs
+first-run.log
+bootstrap.log
+*.log
+
+# Ansible
+*.retry
+.become-*
+
+# Local override files (composable dotfiles — user-created, never stowed)
+local.zsh
+local.gitconfig
+local.yml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Editor
+*.swp
+*.swo
+*~
+.idea/
+.vscode/

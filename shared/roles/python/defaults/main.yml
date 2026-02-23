@@ -1,0 +1,8 @@
+---
+python_version: "3.12"
+
+# Pinned uv installer version and SHA-256 checksum.
+# Update checksum when bumping version:
+#   curl -fsSL https://astral.sh/uv/<version>/install.sh | sha256sum
+uv_version: "0.6.2"
+uv_installer_sha256: "a8fbd4fbceb1a5670e52a24c136a2bf22d3b9a42ef07843a0c39e48991d57beb"

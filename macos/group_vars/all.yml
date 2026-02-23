@@ -1,0 +1,24 @@
+---
+# macOS-specific variables
+#
+# Variable precedence (highest to lowest):
+# 1. Extra vars (-e on command line): bootstrap_mode, apply_system_roles, etc.
+# 2. Platform secrets: macos/secrets/vars.sops.yml (encrypted, decrypted by community.sops)
+# 3. This file: macos/group_vars/all.yml
+# 4. Shared secrets: shared/secrets/vars.sops.yml (encrypted)
+# 5. Role defaults: roles/<name>/defaults/main.yml
+
+# Bootstrap mode (set by wizard, overridden by -e)
+bootstrap_mode: fresh
+apply_system_roles: true
+apply_macos_defaults: true
+
+# Platform identification
+platform: macos
+platform_dir: macos
+
+# Homebrew prefix (Apple Silicon vs Intel)
+homebrew_prefix: /opt/homebrew
+
+# Workstation directory
+workstation_dir: "{{ ansible_facts.env.HOME }}/.workstation"

@@ -1,0 +1,10 @@
+---
+# Calendar role: Dato + BusyCal (macOS, Setapp-managed)
+
+- name: Install Dato
+  ansible.builtin.include_tasks: dato.yml
+  tags: [dato]
+
+- name: Install BusyCal
+  ansible.builtin.include_tasks: busycal.yml
+  tags: [busycal]

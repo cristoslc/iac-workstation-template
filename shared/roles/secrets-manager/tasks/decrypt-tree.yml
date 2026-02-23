@@ -1,0 +1,35 @@
+---
+# Decrypt all .sops files in a directory tree to a parallel .decrypted/ tree.
+# Expects variables: secrets_source, secrets_target
+
+- name: "Find encrypted dotfile fragments in {{ secrets_source }}"
+  ansible.builtin.find:
+    paths: "{{ secrets_source }}"
+    patterns:
+      - "*.sops"
+      - "*.sops.yml"
+      - "*.sops.yaml"
+    recurse: true
+  register: encrypted_files
+
+- name: "Create .decrypted output directories"
+  ansible.builtin.file:
+    path: "{{ item.path | dirname | regex_replace(secrets_source, secrets_target) }}"
+    state: directory
+    mode: "0700"
+  loop: "{{ encrypted_files.files }}"
+  loop_control:
+    label: "{{ item.path | basename }}"
+
+- name: "Decrypt files to .decrypted/"
+  ansible.builtin.shell: |
+    sops -d "{{ item.path }}" > "{{ decrypted_path }}"
+    chmod 600 "{{ decrypted_path }}"
+  vars:
+    # Strip .sops from the filename: "foo.sops" → "foo", "foo.sops.yml" → "foo.yml"
+    decrypted_path: "{{ item.path | regex_replace(secrets_source, secrets_target) | regex_replace('\\.sops(\\.yml|\\.yaml)?$', '\\1') }}"
+  loop: "{{ encrypted_files.files }}"
+  loop_control:
+    label: "{{ item.path | basename }}"
+  changed_when: false
+  no_log: true

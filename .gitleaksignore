@@ -1,0 +1,3 @@
+# Gitleaks allowlist — false positives only.
+# GPG public keys are not secrets.
+shared/roles/vpn/files/surfshark.asc

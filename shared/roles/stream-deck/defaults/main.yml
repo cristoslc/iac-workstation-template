@@ -1,0 +1,6 @@
+---
+skip_version_check: false
+
+opendeck_version: "2.9.1"
+opendeck_sha256: "109ecfd3969dfbaf169bfae8692552ea45a9ddcdaa7fc89f8cd5cabf0b5dbec6"
+opendeck_url: "https://github.com/nekename/OpenDeck/releases/download/v{{ opendeck_version }}/opendeck_{{ opendeck_version }}_amd64.deb"

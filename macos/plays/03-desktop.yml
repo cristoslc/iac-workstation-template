@@ -1,0 +1,51 @@
+---
+- name: "Phase 3: Desktop environment"
+  hosts: localhost
+  connection: local
+
+  roles:
+    - role: browsers
+      tags: [browsers, firefox, brave, chrome, desktop]
+
+    - role: launchers
+      tags: [launchers, raycast, paletro, desktop]
+
+    - role: text-expansion
+      tags: [text-expansion, espanso, desktop]
+
+    - role: calendar
+      tags: [calendar, dato, busycal, desktop]
+
+    - role: communication
+      tags: [communication, slack, signal, desktop]
+
+    - role: media
+      tags: [media, spotify, vlc, downie, desktop]
+
+    - role: vpn
+      tags: [vpn, tailscale, surfshark, desktop]
+
+    - role: backups
+      tags: [backups, backblaze, desktop]
+
+    - role: screenshots
+      tags: [screenshots, cleanshot, desktop]
+
+    - role: link-handler
+      tags: [link-handler, openin, desktop]
+
+    - role: stream-deck
+      tags: [stream-deck, elgato, desktop]
+
+    - role: utilities
+      tags: [utilities, keka, desktop]
+
+    - role: file-transfer
+      tags: [file-transfer, cyberduck, desktop]
+
+    - role: mas
+      tags: [mas, desktop]
+
+    - role: macos-defaults
+      tags: [macos-defaults, desktop]
+      when: apply_macos_defaults | default(true) | bool

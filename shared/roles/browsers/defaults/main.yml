@@ -1,0 +1,13 @@
+---
+daily_driver_browser: firefox
+browsers:
+  - name: firefox
+    darwin_cask: firefox
+    debian_pkg: firefox
+    linux_desktop: firefox.desktop
+  - name: brave
+    darwin_cask: brave-browser
+    linux_desktop: brave-browser.desktop
+  - name: chrome
+    darwin_cask: google-chrome
+    linux_desktop: google-chrome.desktop

@@ -1,0 +1,57 @@
+---
+- name: Check if fnm is installed
+  ansible.builtin.command: "{{ ansible_facts.env.HOME }}/.local/share/fnm/fnm --version"
+  register: fnm_check
+  changed_when: false
+  failed_when: false
+
+- name: "fnm — check for newer version on GitHub"
+  ansible.builtin.include_tasks: "{{ workstation_dir }}/shared/tasks/version-check.yml"
+  vars:
+    tool_name: fnm
+    tool_repo: Schniz/fnm
+    pinned_version: "{{ fnm_version }}"
+
+- name: Install fnm from pinned GitHub release
+  when: fnm_check.rc != 0
+  block:
+    - name: Set fnm platform vars
+      ansible.builtin.set_fact:
+        _fnm_arch: "{{ 'macos' if ansible_facts.os_family == 'Darwin' else 'linux' }}"
+        _fnm_sha256: "{{ fnm_sha256_darwin if ansible_facts.os_family == 'Darwin' else fnm_sha256_linux }}"
+
+    - name: "fnm — download and verify"
+      ansible.builtin.include_tasks: "{{ workstation_dir }}/shared/tasks/download-and-verify.yml"
+      vars:
+        tool_name: fnm
+        download_url: "https://github.com/Schniz/fnm/releases/download/v{{ fnm_version }}/fnm-{{ _fnm_arch }}.zip"
+        expected_sha256: "{{ _fnm_sha256 }}"
+
+    - name: Create fnm directory
+      ansible.builtin.file:
+        path: "{{ ansible_facts.env.HOME }}/.local/share/fnm"
+        state: directory
+        mode: "0755"
+
+    - name: Extract fnm binary
+      ansible.builtin.unarchive:
+        src: "{{ _verified_download.path }}"
+        dest: "{{ ansible_facts.env.HOME }}/.local/share/fnm"
+        remote_src: true
+        mode: "0755"
+
+    - name: Clean up fnm temp file
+      ansible.builtin.file:
+        path: "{{ _verified_download.path }}"
+        state: absent
+
+- name: Install Node LTS via fnm
+  ansible.builtin.shell: |
+    export PATH="{{ ansible_facts.env.HOME }}/.local/share/fnm:$PATH"
+    eval "$(fnm env)"
+    fnm install --lts
+    fnm default lts-latest
+  args:
+    executable: /bin/bash
+  register: node_install
+  changed_when: "'Installing' in node_install.stderr"

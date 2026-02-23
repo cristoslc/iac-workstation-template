@@ -1,0 +1,14 @@
+---
+# OpenIn sub-task (macOS only — Setapp-managed)
+- name: Install OpenIn (macOS)
+  when: ansible_facts.os_family == "Darwin"
+  block:
+    - name: Check if OpenIn is installed
+      ansible.builtin.stat:
+        path: /Applications/Setapp/OpenIn.app
+      register: openin_check
+
+    - name: Remind to install OpenIn via Setapp
+      when: not openin_check.stat.exists
+      ansible.builtin.debug:
+        msg: "OpenIn is not installed. Install it via Setapp for link/file routing."

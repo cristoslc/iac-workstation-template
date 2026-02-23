@@ -1,0 +1,6 @@
+---
+# Screenshots role: CleanShot X (macOS, Setapp-managed)
+
+- name: Install CleanShot X
+  ansible.builtin.include_tasks: cleanshot.yml
+  tags: [cleanshot]

@@ -1,0 +1,22 @@
+---
+- name: Verify X11 session
+  ansible.builtin.assert:
+    that: ansible_facts.env.XDG_SESSION_TYPE | default('x11') == 'x11'
+    fail_msg: >
+      Wayland detected. This setup requires X11 for Espanso and Vicinae.
+      Switch to X11 in your display manager settings.
+  when: ansible_facts.env.XDG_SESSION_TYPE is defined
+
+- name: Check if update-manager config exists
+  ansible.builtin.stat:
+    path: /etc/update-manager/release-upgrades
+  register: _update_manager_conf
+
+- name: Pin release to prevent dist-upgrade
+  ansible.builtin.lineinfile:
+    path: /etc/update-manager/release-upgrades
+    regexp: '^Prompt='
+    line: 'Prompt=never'
+    state: present
+  become: true
+  when: _update_manager_conf.stat.exists

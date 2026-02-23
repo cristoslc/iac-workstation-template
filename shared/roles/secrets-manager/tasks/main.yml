@@ -1,0 +1,11 @@
+---
+# Secrets Manager role: 1Password + SOPS/age
+# Sub-tasks carry tool-level tags for selective runs.
+
+- name: Install and configure 1Password
+  ansible.builtin.include_tasks: onepassword.yml
+  tags: [onepassword]
+
+- name: Resolve age key and decrypt secrets
+  ansible.builtin.include_tasks: sops.yml
+  tags: [sops]

@@ -1,0 +1,18 @@
+---
+# Pinned tool versions and SHA-256 checksums for Linux base packages.
+# An automatic update check runs before install — set skip_version_check: true
+# to opt out.
+
+skip_version_check: false
+
+dust_version: "1.2.4"
+dust_sha256: "c1bd69dc1cd05bbc84d3581d6d355fe60063c235f2bfec5bd46d551e5baacc66"
+dust_url: "https://github.com/bootandy/dust/releases/download/v{{ dust_version }}/du-dust_{{ dust_version }}-1_amd64.deb"
+
+duf_version: "0.9.1"
+duf_sha256: "4e0065640fbcf33c6abc5312c4c83f4d605820277b4ba5e7779fe6d051d85856"
+duf_url: "https://github.com/muesli/duf/releases/download/v{{ duf_version }}/duf_{{ duf_version }}_linux_amd64.deb"
+
+eza_gpg_url: "https://raw.githubusercontent.com/eza-community/eza/main/deb.asc"
+eza_apt_repo: >-
+  deb [signed-by=/etc/apt/keyrings/eza.asc] http://deb.gierens.de stable main

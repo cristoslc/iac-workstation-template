@@ -1,0 +1,24 @@
+---
+# macOS: VPN apps installed via Brewfile. Verify presence.
+
+- name: Verify Tailscale is installed
+  ansible.builtin.command: brew list --cask tailscale
+  register: tailscale_check
+  changed_when: false
+  failed_when: false
+
+- name: Note about Tailscale
+  when: tailscale_check.rc != 0
+  ansible.builtin.debug:
+    msg: "Tailscale not installed. Add 'tailscale' to Brewfile and run brew bundle."
+
+- name: Verify Surfshark is installed
+  ansible.builtin.command: brew list --cask surfshark
+  register: surfshark_check
+  changed_when: false
+  failed_when: false
+
+- name: Note about Surfshark
+  when: surfshark_check.rc != 0
+  ansible.builtin.debug:
+    msg: "Surfshark not installed. Add 'surfshark' to Brewfile and run brew bundle."

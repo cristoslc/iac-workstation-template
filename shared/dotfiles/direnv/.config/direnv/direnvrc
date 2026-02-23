@@ -1,0 +1,36 @@
+# Managed by iac-daily-driver-environments.
+# Common direnv layouts for project automation.
+
+# Use a Python venv managed by uv.
+layout_uv() {
+  VIRTUAL_ENV="$(pwd)/.venv"
+  if [[ ! -d "$VIRTUAL_ENV" ]]; then
+    log_status "creating venv with uv"
+    uv venv "$VIRTUAL_ENV"
+  fi
+  PATH_add "$VIRTUAL_ENV/bin"
+  export VIRTUAL_ENV
+}
+
+# Use a standard Python venv.
+layout_python-venv() {
+  VIRTUAL_ENV="$(pwd)/.venv"
+  if [[ ! -d "$VIRTUAL_ENV" ]]; then
+    log_status "creating venv"
+    python3 -m venv "$VIRTUAL_ENV"
+  fi
+  PATH_add "$VIRTUAL_ENV/bin"
+  export VIRTUAL_ENV
+}
+
+# Use a specific Node version via fnm.
+use_fnm() {
+  local version="${1:-}"
+  if [[ -n "$version" ]]; then
+    fnm use "$version"
+  elif [[ -f .node-version ]]; then
+    fnm use
+  elif [[ -f .nvmrc ]]; then
+    fnm use
+  fi
+}

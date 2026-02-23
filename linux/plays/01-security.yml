@@ -1,0 +1,31 @@
+---
+- name: "Phase 1: Security and secrets"
+  hosts: localhost
+  connection: local
+
+  pre_tasks:
+    - name: Ensure Ansible log directory exists
+      ansible.builtin.file:
+        path: "{{ ansible_facts.env.HOME }}/.local/log"
+        state: directory
+        mode: "0700"
+
+    - name: Rotate previous Ansible log
+      ansible.builtin.copy:
+        src: "{{ ansible_facts.env.HOME }}/.local/log/ansible.log"
+        dest: "{{ ansible_facts.env.HOME }}/.local/log/ansible.log.1"
+        remote_src: true
+        mode: "0600"
+      failed_when: false
+
+    - name: Truncate Ansible log for this run
+      ansible.builtin.copy:
+        content: ""
+        dest: "{{ ansible_facts.env.HOME }}/.local/log/ansible.log"
+        mode: "0600"
+
+  roles:
+    - role: secrets-manager
+      tags: [secrets-manager, onepassword, sops, security]
+    - role: firewall
+      tags: [firewall, security]

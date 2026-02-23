@@ -1,0 +1,12 @@
+---
+# Dock
+dock_autohide: true
+dock_tilesize: 48
+dock_mineffect: scale
+
+# Keyboard
+keyboard_repeat_rate: 2
+keyboard_initial_repeat_delay: 15
+
+# Trackpad
+trackpad_speed: 2.5

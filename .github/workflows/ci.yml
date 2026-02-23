@@ -1,0 +1,83 @@
+---
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system packages
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq stow shellcheck
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python tools
+        run: |
+          pip install yamllint ansible-lint ansible-core
+
+      - name: Install Ansible Galaxy collections
+        run: |
+          ansible-galaxy collection install -r shared/requirements.yml
+
+      - name: Install bats-core
+        run: |
+          sudo apt-get install -y -qq bats
+
+      - name: yamllint
+        run: yamllint . --no-warnings
+
+      - name: shellcheck
+        run: |
+          shellcheck --severity=warning \
+            setup.sh \
+            bootstrap.sh \
+            first-run.sh \
+            linux/bootstrap.sh \
+            macos/bootstrap.sh \
+            shared/lib/wizard.sh \
+            scripts/*.sh
+
+      - name: ansible-lint (linux)
+        env:
+          ANSIBLE_VARS_ENABLED: host_group_vars
+          ANSIBLE_CONFIG: linux/ansible.cfg
+        run: ansible-lint linux/site.yml
+
+      - name: ansible-lint (macos)
+        env:
+          ANSIBLE_VARS_ENABLED: host_group_vars
+          ANSIBLE_CONFIG: macos/ansible.cfg
+        run: ansible-lint macos/site.yml
+
+      - name: check-stow-collisions
+        run: ./scripts/check-stow-collisions.sh
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: bats tests
+        run: bats tests/bats/
+
+      - name: Python tests (first-run wizard + setup TUI)
+        run: uv run --with rich,pyyaml,textual,pytest,pytest-asyncio pytest tests/python/ -v
+
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

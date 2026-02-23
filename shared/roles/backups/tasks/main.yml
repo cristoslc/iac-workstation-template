@@ -1,0 +1,10 @@
+---
+# Backups role: Backblaze (macOS) + Timeshift (Linux)
+
+- name: Install Backblaze
+  ansible.builtin.include_tasks: backblaze.yml
+  tags: [backblaze]
+
+- name: Install Timeshift
+  ansible.builtin.include_tasks: timeshift.yml
+  tags: [timeshift]

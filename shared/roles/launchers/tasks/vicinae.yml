@@ -1,0 +1,39 @@
+---
+# Vicinae sub-task (Debian only)
+- name: Install Vicinae (Debian)
+  when: ansible_facts.os_family == "Debian"
+  block:
+    - name: Check if Vicinae is installed
+      ansible.builtin.command: which vicinae
+      register: vicinae_check
+      changed_when: false
+      failed_when: false
+
+    - name: Install Vicinae
+      when: vicinae_check.rc != 0
+      block:
+        - name: Download Vicinae install script
+          ansible.builtin.get_url:
+            url: https://vicinae.com/install.sh
+            dest: /tmp/vicinae-install.sh
+            mode: "0755"
+
+        - name: Run Vicinae install script
+          ansible.builtin.command: bash /tmp/vicinae-install.sh
+          become: true
+
+        - name: Clean up Vicinae install script
+          ansible.builtin.file:
+            path: /tmp/vicinae-install.sh
+            state: absent
+
+    - name: Install Vicinae URL handler
+      ansible.builtin.copy:
+        src: vicinae-url-handler.desktop
+        dest: "{{ ansible_facts.env.HOME }}/.local/share/applications/vicinae-url-handler.desktop"
+        mode: "0644"
+
+    - name: Register Vicinae URL handler
+      ansible.builtin.command: xdg-mime default vicinae-url-handler.desktop x-scheme-handler/vicinae
+      changed_when: false
+      failed_when: false

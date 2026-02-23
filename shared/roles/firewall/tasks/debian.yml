@@ -1,0 +1,32 @@
+---
+# Linux: Configure ufw (Uncomplicated Firewall).
+
+- name: Install ufw
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+  become: true
+
+- name: Set default deny incoming
+  community.general.ufw:
+    direction: incoming
+    default: deny
+  become: true
+
+- name: Set default allow outgoing
+  community.general.ufw:
+    direction: outgoing
+    default: allow
+  become: true
+
+- name: Allow Tailscale subnet (100.64.0.0/10)
+  community.general.ufw:
+    rule: allow
+    from_ip: 100.64.0.0/10
+    comment: Tailscale CGNAT range
+  become: true
+
+- name: Enable ufw
+  community.general.ufw:
+    state: enabled
+  become: true

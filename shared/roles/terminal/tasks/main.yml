@@ -1,0 +1,26 @@
+---
+# Terminal role: tmux + terminal emulator verification
+
+- name: Install tmux (macOS)
+  when: ansible_facts.os_family == "Darwin"
+  community.general.homebrew:
+    name: tmux
+    state: present
+
+- name: Install tmux (Debian)
+  when: ansible_facts.os_family == "Debian"
+  ansible.builtin.apt:
+    name: tmux
+    state: present
+  become: true
+
+- name: Verify iTerm2 is installed (macOS)
+  when: ansible_facts.os_family == "Darwin"
+  ansible.builtin.stat:
+    path: /Applications/iTerm.app
+  register: iterm_check
+
+- name: Note about iTerm2 (macOS)
+  when: ansible_facts.os_family == "Darwin" and not iterm_check.stat.exists
+  ansible.builtin.debug:
+    msg: "iTerm2 not found. It should be installed via Brewfile (cask 'iterm2')."

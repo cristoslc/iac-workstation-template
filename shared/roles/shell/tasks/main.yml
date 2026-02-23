@@ -1,0 +1,11 @@
+---
+# Shell role: zsh + direnv
+# Sub-tasks carry tool-level tags for selective runs.
+
+- name: Install and configure zsh
+  ansible.builtin.include_tasks: zsh.yml
+  tags: [zsh]
+
+- name: Install direnv
+  ansible.builtin.include_tasks: direnv.yml
+  tags: [direnv]

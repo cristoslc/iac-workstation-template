@@ -1,0 +1,13 @@
+---
+# Ansible-lint configuration.
+# SOPS vars plugin is disabled at lint time via ANSIBLE_VARS_ENABLED
+# (set in lint.sh and CI) because it requires an age key to load.
+
+exclude_paths:
+  - "**/secrets/"
+  - "**/.decrypted/"
+  - "**/collections/"
+
+# Permit shell module where justified (e.g., verified downloads).
+warn_list:
+  - command-instead-of-shell

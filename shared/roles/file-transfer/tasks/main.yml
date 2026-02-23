@@ -1,0 +1,10 @@
+---
+# File Transfer role: Cyberduck (macOS) + Filezilla (Linux)
+
+- name: Install Cyberduck
+  ansible.builtin.include_tasks: cyberduck.yml
+  tags: [cyberduck]
+
+- name: Install Filezilla
+  ansible.builtin.include_tasks: filezilla.yml
+  tags: [filezilla]

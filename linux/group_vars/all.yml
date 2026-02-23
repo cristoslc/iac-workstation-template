@@ -1,0 +1,21 @@
+---
+# Linux-specific variables
+#
+# Variable precedence (highest to lowest):
+# 1. Extra vars (-e on command line): bootstrap_mode, apply_system_roles, etc.
+# 2. Platform secrets: linux/secrets/vars.sops.yml (encrypted, decrypted by community.sops)
+# 3. This file: linux/group_vars/all.yml
+# 4. Shared secrets: shared/secrets/vars.sops.yml (encrypted)
+# 5. Role defaults: roles/<name>/defaults/main.yml
+
+# Bootstrap mode (set by wizard, overridden by -e)
+# Values: fresh, new_account, existing_account
+bootstrap_mode: fresh
+apply_system_roles: true
+
+# Platform identification
+platform: linux
+platform_dir: linux
+
+# Workstation directory (overridden by bootstrap.sh -e)
+workstation_dir: "{{ ansible_facts.env.HOME }}/.workstation"

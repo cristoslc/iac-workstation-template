@@ -1,0 +1,10 @@
+---
+# VPN role: Tailscale + Surfshark
+
+- name: Install VPN tools (macOS)
+  when: ansible_facts.os_family == "Darwin"
+  ansible.builtin.include_tasks: darwin.yml
+
+- name: Install VPN tools (Debian)
+  when: ansible_facts.os_family == "Debian"
+  ansible.builtin.include_tasks: debian.yml

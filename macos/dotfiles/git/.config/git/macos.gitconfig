@@ -1,0 +1,5 @@
+# macOS-specific git config — included by .gitconfig via local.gitconfig.
+# 1Password SSH commit signing on macOS.
+
+[gpg "ssh"]
+  program = /Applications/1Password.app/Contents/MacOS/op-ssh-sign

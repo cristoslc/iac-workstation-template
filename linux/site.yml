@@ -1,0 +1,6 @@
+---
+- import_playbook: plays/00-system.yml
+- import_playbook: plays/01-security.yml
+- import_playbook: plays/02-dev-tools.yml
+- import_playbook: plays/03-desktop.yml
+- import_playbook: plays/04-dotfiles.yml

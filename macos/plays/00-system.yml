@@ -1,0 +1,14 @@
+---
+- name: "Phase 0: System foundation"
+  hosts: localhost
+  connection: local
+
+  pre_tasks:
+    - name: Verify running on macOS
+      ansible.builtin.assert:
+        that: ansible_facts.os_family == "Darwin"
+        fail_msg: "This playbook is for macOS only."
+
+  roles:
+    - role: homebrew
+      tags: [homebrew, system]

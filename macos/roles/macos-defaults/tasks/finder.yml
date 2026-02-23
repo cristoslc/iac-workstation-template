@@ -1,0 +1,36 @@
+---
+- name: "Finder: Show all filename extensions"
+  community.general.osx_defaults:
+    domain: NSGlobalDomain
+    key: AppleShowAllExtensions
+    type: bool
+    value: true
+    state: present
+  notify: restart finder
+
+- name: "Finder: Show path bar"
+  community.general.osx_defaults:
+    domain: com.apple.finder
+    key: ShowPathbar
+    type: bool
+    value: true
+    state: present
+  notify: restart finder
+
+- name: "Finder: Default to list view"
+  community.general.osx_defaults:
+    domain: com.apple.finder
+    key: FXPreferredViewStyle
+    type: string
+    value: Nlsv
+    state: present
+  notify: restart finder
+
+- name: "Finder: New window targets home directory"
+  community.general.osx_defaults:
+    domain: com.apple.finder
+    key: NewWindowTarget
+    type: string
+    value: PfHm
+    state: present
+  notify: restart finder

@@ -1,0 +1,32 @@
+---
+# GitHub CLI sub-task
+- name: Install GitHub CLI (macOS)
+  when: ansible_facts.os_family == "Darwin"
+  community.general.homebrew:
+    name: gh
+    state: present
+
+- name: Install GitHub CLI (Debian)
+  when: ansible_facts.os_family == "Debian"
+  block:
+    - name: Add GitHub CLI GPG key
+      ansible.builtin.shell: |
+        curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null
+        sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+      args:
+        creates: /etc/apt/keyrings/githubcli-archive-keyring.gpg
+      become: true
+
+    - name: Add GitHub CLI apt repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main"
+        filename: github-cli
+        state: present
+      become: true
+
+    - name: Install GitHub CLI
+      ansible.builtin.apt:
+        name: gh
+        state: present
+        update_cache: true
+      become: true

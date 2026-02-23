@@ -1,0 +1,95 @@
+---
+# Back up pre-existing dotfiles before stowing.
+# Migrates content to local override files where applicable.
+
+- name: Set backup directory
+  ansible.builtin.set_fact:
+    backup_dir: "{{ ansible_facts.env.HOME }}/.workstation-backup/{{ ansible_facts.date_time.iso8601_basic_short }}"
+
+- name: Check for pre-existing .zshrc
+  ansible.builtin.stat:
+    path: "{{ ansible_facts.env.HOME }}/.zshrc"
+  register: existing_zshrc
+
+- name: Migrate existing .zshrc to local.zsh
+  when: existing_zshrc.stat.exists and not existing_zshrc.stat.islnk
+  block:
+    - name: Create zsh config directory
+      ansible.builtin.file:
+        path: "{{ ansible_facts.env.HOME }}/.config/zsh"
+        state: directory
+        mode: "0755"
+
+    - name: Copy existing .zshrc content to local.zsh
+      ansible.builtin.copy:
+        src: "{{ ansible_facts.env.HOME }}/.zshrc"
+        dest: "{{ ansible_facts.env.HOME }}/.config/zsh/local.zsh"
+        remote_src: true
+        mode: "0600"
+        force: false  # Don't overwrite if local.zsh already exists
+
+    - name: Back up original .zshrc
+      ansible.builtin.copy:
+        src: "{{ ansible_facts.env.HOME }}/.zshrc"
+        dest: "{{ backup_dir }}/.zshrc"
+        remote_src: true
+        mode: "0600"
+
+    - name: Remove original .zshrc (stow will replace it)
+      ansible.builtin.file:
+        path: "{{ ansible_facts.env.HOME }}/.zshrc"
+        state: absent
+
+- name: Check for pre-existing .gitconfig
+  ansible.builtin.stat:
+    path: "{{ ansible_facts.env.HOME }}/.gitconfig"
+  register: existing_gitconfig
+
+- name: Migrate existing .gitconfig to local.gitconfig
+  when: existing_gitconfig.stat.exists and not existing_gitconfig.stat.islnk
+  block:
+    - name: Create git config directory
+      ansible.builtin.file:
+        path: "{{ ansible_facts.env.HOME }}/.config/git"
+        state: directory
+        mode: "0755"
+
+    - name: Copy existing .gitconfig content to local.gitconfig
+      ansible.builtin.copy:
+        src: "{{ ansible_facts.env.HOME }}/.gitconfig"
+        dest: "{{ ansible_facts.env.HOME }}/.config/git/local.gitconfig"
+        remote_src: true
+        mode: "0600"
+        force: false
+
+    - name: Back up original .gitconfig
+      ansible.builtin.copy:
+        src: "{{ ansible_facts.env.HOME }}/.gitconfig"
+        dest: "{{ backup_dir }}/.gitconfig"
+        remote_src: true
+        mode: "0600"
+
+    - name: Remove original .gitconfig
+      ansible.builtin.file:
+        path: "{{ ansible_facts.env.HOME }}/.gitconfig"
+        state: absent
+
+- name: Check for pre-existing .zshenv
+  ansible.builtin.stat:
+    path: "{{ ansible_facts.env.HOME }}/.zshenv"
+  register: existing_zshenv
+
+- name: Back up and remove pre-existing .zshenv
+  when: existing_zshenv.stat.exists and not existing_zshenv.stat.islnk
+  block:
+    - name: Back up original .zshenv
+      ansible.builtin.copy:
+        src: "{{ ansible_facts.env.HOME }}/.zshenv"
+        dest: "{{ backup_dir }}/.zshenv"
+        remote_src: true
+        mode: "0600"
+
+    - name: Remove original .zshenv
+      ansible.builtin.file:
+        path: "{{ ansible_facts.env.HOME }}/.zshenv"
+        state: absent

@@ -1,0 +1,61 @@
+---
+# Stow all packages in a given directory.
+# Expects variables: stow_dir, stow_label
+
+- name: "Check if {{ stow_label }} dotfiles directory exists"
+  ansible.builtin.stat:
+    path: "{{ stow_dir }}"
+  register: stow_dir_stat
+
+- name: "Find {{ stow_label }} stow packages"
+  when: stow_dir_stat.stat.exists
+  ansible.builtin.find:
+    paths: "{{ stow_dir }}"
+    file_type: directory
+    recurse: false
+  register: stow_packages
+
+- name: "Resolve {{ stow_label }} stow conflicts"
+  when: stow_dir_stat.stat.exists and stow_packages.files | length > 0
+  ansible.builtin.shell: |
+    conflicts=$(stow --no-folding \
+      -d "{{ stow_dir }}" \
+      -t "{{ ansible_facts.env.HOME }}" \
+      -n --restow \
+      "{{ item.path | basename }}" 2>&1 || true)
+    echo "$conflicts" | grep 'existing target is neither a link nor a directory:' | \
+      sed 's/.*existing target is neither a link nor a directory: //' | \
+      while IFS= read -r relpath; do
+        target="{{ ansible_facts.env.HOME }}/$relpath"
+        if [ -f "$target" ] && [ ! -L "$target" ]; then
+          backup_dir="{{ ansible_facts.env.HOME }}/.workstation-backup/stow-conflicts"
+          backup_path="$backup_dir/$relpath"
+          mkdir -p "$(dirname "$backup_path")"
+          cp "$target" "$backup_path"
+          rm "$target"
+          echo "RESOLVED: $relpath"
+        fi
+      done
+    exit 0
+  args:
+    executable: /bin/bash
+  loop: "{{ stow_packages.files }}"
+  loop_control:
+    label: "{{ item.path | basename }}"
+  register: _stow_conflicts
+  changed_when: "'RESOLVED' in _stow_conflicts.stdout"
+
+- name: "Stow {{ stow_label }} packages"
+  when: stow_dir_stat.stat.exists and stow_packages.files | length > 0
+  ansible.builtin.command: >
+    stow --no-folding
+    -d "{{ stow_dir }}"
+    -t "{{ ansible_facts.env.HOME }}"
+    --restow
+    "{{ item.path | basename }}"
+  loop: "{{ stow_packages.files }}"
+  loop_control:
+    label: "{{ item.path | basename }}"
+  register: stow_result
+  changed_when: stow_result.rc == 0
+  failed_when: stow_result.rc != 0

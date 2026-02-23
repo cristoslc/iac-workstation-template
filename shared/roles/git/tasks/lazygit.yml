@@ -1,0 +1,48 @@
+---
+# lazygit sub-task
+- name: Install lazygit (macOS)
+  when: ansible_facts.os_family == "Darwin"
+  community.general.homebrew:
+    name: lazygit
+    state: present
+
+- name: Install lazygit (Debian)
+  when: ansible_facts.os_family == "Debian"
+  block:
+    - name: Check lazygit version
+      ansible.builtin.include_tasks: "{{ workstation_dir }}/shared/tasks/version-check.yml"
+      vars:
+        tool_name: lazygit
+        tool_repo: jesseduffield/lazygit
+        pinned_version: "{{ lazygit_version }}"
+
+    - name: Check if lazygit is installed at correct version
+      ansible.builtin.shell: lazygit --version 2>/dev/null | grep -qF '{{ lazygit_version }}'
+      register: lazygit_installed
+      changed_when: false
+      failed_when: false
+
+    - name: Download and verify lazygit
+      when: lazygit_installed.rc != 0
+      ansible.builtin.include_tasks: "{{ workstation_dir }}/shared/tasks/download-and-verify.yml"
+      vars:
+        download_url: "{{ lazygit_url }}"
+        expected_sha256: "{{ lazygit_sha256 }}"
+        tool_name: lazygit
+
+    - name: Extract lazygit binary
+      when: lazygit_installed.rc != 0
+      ansible.builtin.unarchive:
+        src: "{{ _verified_download.path }}"
+        dest: /usr/local/bin
+        remote_src: true
+        include:
+          - lazygit
+        mode: "0755"
+      become: true
+
+    - name: Clean up lazygit temp file
+      when: lazygit_installed.rc != 0 and _verified_download is defined
+      ansible.builtin.file:
+        path: "{{ _verified_download.path }}"
+        state: absent

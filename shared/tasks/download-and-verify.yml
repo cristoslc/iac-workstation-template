@@ -1,0 +1,45 @@
+---
+# Reusable task: download a file to a temp path and verify its SHA-256 checksum.
+#
+# Required vars:
+#   download_url:       Full URL to download
+#   expected_sha256:    Expected SHA-256 hex digest
+#   tool_name:          Human-readable name for log messages
+#
+# Registers:
+#   _verified_download  — dict with .path set to the temp file path
+
+- name: "{{ tool_name }} — create temp file for download"
+  ansible.builtin.tempfile:
+    suffix: "-{{ tool_name }}"
+  register: _download_tmp
+
+- name: "{{ tool_name }} — download artifact"
+  ansible.builtin.get_url:
+    url: "{{ download_url }}"
+    dest: "{{ _download_tmp.path }}"
+    mode: "0644"
+    force: true
+  become: true
+
+- name: "{{ tool_name }} — compute SHA-256 checksum"
+  ansible.builtin.stat:
+    path: "{{ _download_tmp.path }}"
+    checksum_algorithm: sha256
+  register: _download_stat
+
+- name: "{{ tool_name }} — verify checksum"
+  ansible.builtin.assert:
+    that:
+      - _download_stat.stat.checksum == expected_sha256
+    fail_msg: >
+      CHECKSUM MISMATCH for {{ tool_name }}!
+      Expected: {{ expected_sha256 }}
+      Got:      {{ _download_stat.stat.checksum }}
+      The downloaded file may have been tampered with.
+    success_msg: "{{ tool_name }} checksum verified."
+
+- name: "{{ tool_name }} — export verified path"
+  ansible.builtin.set_fact:
+    _verified_download:
+      path: "{{ _download_tmp.path }}"

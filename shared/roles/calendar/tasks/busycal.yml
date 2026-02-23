@@ -1,0 +1,14 @@
+---
+# BusyCal sub-task (macOS only — Setapp-managed)
+- name: Install BusyCal (macOS)
+  when: ansible_facts.os_family == "Darwin"
+  block:
+    - name: Check if BusyCal is installed
+      ansible.builtin.stat:
+        path: /Applications/Setapp/BusyCal.app
+      register: busycal_check
+
+    - name: Remind to install BusyCal via Setapp
+      when: not busycal_check.stat.exists
+      ansible.builtin.debug:
+        msg: "BusyCal is not installed. Install it via Setapp."

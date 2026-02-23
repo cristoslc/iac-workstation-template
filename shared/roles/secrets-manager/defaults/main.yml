@@ -1,0 +1,3 @@
+---
+age_keyfile: "{{ ansible_facts.env.HOME }}/.config/sops/age/keys.txt"
+onepassword_age_key_ref: "op://Private/age-key/private-key"

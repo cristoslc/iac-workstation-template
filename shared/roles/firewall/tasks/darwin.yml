@@ -1,0 +1,14 @@
+---
+# macOS: Enable the application firewall (socketfilterfw) + stealth mode.
+
+- name: Enable macOS application firewall
+  ansible.builtin.command: /usr/libexec/ApplicationFirewall/socketfilterfw --setglobalstate on
+  become: true
+  register: _fw_enable
+  changed_when: "'already enabled' not in _fw_enable.stdout"
+
+- name: Enable stealth mode (ignore unsolicited ICMP/probes)
+  ansible.builtin.command: /usr/libexec/ApplicationFirewall/socketfilterfw --setstealthmode on
+  become: true
+  register: _fw_stealth
+  changed_when: "'already enabled' not in _fw_stealth.stdout"

@@ -1,0 +1,15 @@
+---
+# Keka sub-task (macOS only — installed via Brewfile)
+- name: Install Keka (macOS)
+  when: ansible_facts.os_family == "Darwin"
+  block:
+    - name: Verify Keka is installed
+      ansible.builtin.command: brew list --cask keka
+      register: keka_check
+      changed_when: false
+      failed_when: false
+
+    - name: Note about Keka
+      when: keka_check.rc != 0
+      ansible.builtin.debug:
+        msg: "Keka not installed. Add 'keka' to Brewfile and run brew bundle."

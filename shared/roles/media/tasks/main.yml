@@ -1,0 +1,14 @@
+---
+# Media role: Spotify, VLC, Downie
+
+- name: Install Spotify
+  ansible.builtin.include_tasks: spotify.yml
+  tags: [spotify]
+
+- name: Install VLC
+  ansible.builtin.include_tasks: vlc.yml
+  tags: [vlc]
+
+- name: Install Downie
+  ansible.builtin.include_tasks: downie.yml
+  tags: [downie]

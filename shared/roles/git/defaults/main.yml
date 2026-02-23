@@ -1,0 +1,14 @@
+---
+# Pinned tool versions and SHA-256 checksums for git sub-tools (Linux).
+# An automatic update check runs before install — set skip_version_check: true
+# to opt out.
+
+skip_version_check: false
+
+lazygit_version: "0.59.0"
+lazygit_sha256: "264283f40a40c899d702a338b20622f690221f753f03bac827c1f34e91f516c2"
+lazygit_url: "https://github.com/jesseduffield/lazygit/releases/download/v{{ lazygit_version }}/lazygit_{{ lazygit_version }}_Linux_x86_64.tar.gz"
+
+delta_version: "0.18.2"
+delta_sha256: "1658c7b61825d411b50734f34016101309e4b6e7f5799944cf8e4ac542cebd7f"
+delta_url: "https://github.com/dandavison/delta/releases/download/{{ delta_version }}/git-delta_{{ delta_version }}_amd64.deb"

@@ -1,0 +1,16 @@
+---
+- name: "Keyboard: Fast key repeat rate"
+  community.general.osx_defaults:
+    domain: NSGlobalDomain
+    key: KeyRepeat
+    type: int
+    value: "{{ keyboard_repeat_rate }}"
+    state: present
+
+- name: "Keyboard: Short delay until repeat"
+  community.general.osx_defaults:
+    domain: NSGlobalDomain
+    key: InitialKeyRepeat
+    type: int
+    value: "{{ keyboard_initial_repeat_delay }}"
+    state: present

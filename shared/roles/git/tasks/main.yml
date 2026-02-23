@@ -1,0 +1,61 @@
+---
+# Git role: core git + gh + lazygit + delta
+# Sub-tasks carry tool-level tags for selective runs.
+
+- name: Include OS-specific git install
+  ansible.builtin.include_tasks: "{{ ansible_facts.os_family | lower }}.yml"
+
+- name: Ensure git config directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts.env.HOME }}/.config/git"
+    state: directory
+    mode: "0755"
+
+- name: Configure git user name
+  community.general.git_config:
+    name: user.name
+    scope: file
+    file: "{{ ansible_facts.env.HOME }}/.config/git/local.gitconfig"
+    value: "{{ git_user_name }}"
+  when: git_user_name is defined
+
+- name: Configure git user email
+  community.general.git_config:
+    name: user.email
+    scope: file
+    file: "{{ ansible_facts.env.HOME }}/.config/git/local.gitconfig"
+    value: "{{ git_user_email }}"
+  when: git_user_email is defined
+
+- name: Configure git signing key
+  community.general.git_config:
+    name: user.signingkey
+    scope: file
+    file: "{{ ansible_facts.env.HOME }}/.config/git/local.gitconfig"
+    value: "{{ git_signing_key }}"
+  when: git_signing_key is defined
+
+- name: Check git default branch setting
+  ansible.builtin.command: git config --global init.defaultBranch
+  register: _git_default_branch
+  changed_when: false
+  failed_when: false
+
+- name: Configure git default branch
+  community.general.git_config:
+    name: init.defaultBranch
+    scope: global
+    value: main
+  when: _git_default_branch.stdout != "main"
+
+- name: Install GitHub CLI
+  ansible.builtin.include_tasks: gh.yml
+  tags: [gh]
+
+- name: Install lazygit
+  ansible.builtin.include_tasks: lazygit.yml
+  tags: [lazygit]
+
+- name: Install delta
+  ansible.builtin.include_tasks: delta.yml
+  tags: [delta]

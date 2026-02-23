@@ -1,0 +1,14 @@
+---
+# Launchers role: Raycast + Paletro (macOS) + Vicinae (Linux)
+
+- name: Install Raycast
+  ansible.builtin.include_tasks: raycast.yml
+  tags: [raycast]
+
+- name: Install Paletro
+  ansible.builtin.include_tasks: paletro.yml
+  tags: [paletro]
+
+- name: Install Vicinae
+  ansible.builtin.include_tasks: vicinae.yml
+  tags: [vicinae]

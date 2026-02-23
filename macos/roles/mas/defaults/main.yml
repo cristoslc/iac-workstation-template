@@ -1,0 +1,6 @@
+---
+# Mac App Store apps to install.
+# Find IDs with: mas search <app name>
+mas_apps:
+  - name: Amphetamine
+    id: 937984704

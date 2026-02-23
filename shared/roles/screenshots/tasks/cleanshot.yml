@@ -1,0 +1,14 @@
+---
+# CleanShot X sub-task (macOS only — Setapp-managed)
+- name: Install CleanShot X (macOS)
+  when: ansible_facts.os_family == "Darwin"
+  block:
+    - name: Check if CleanShot X is installed
+      ansible.builtin.stat:
+        path: /Applications/Setapp/CleanShot X.app
+      register: cleanshot_check
+
+    - name: Remind to install CleanShot X via Setapp
+      when: not cleanshot_check.stat.exists
+      ansible.builtin.debug:
+        msg: "CleanShot X is not installed. Install it via Setapp."

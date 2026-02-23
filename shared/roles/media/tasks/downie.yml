@@ -1,0 +1,14 @@
+---
+# Downie sub-task (macOS only — Setapp-managed)
+- name: Check if Downie is installed
+  when: ansible_facts.os_family == "Darwin"
+  block:
+    - name: Check if Downie is installed
+      ansible.builtin.stat:
+        path: /Applications/Setapp/Downie.app
+      register: downie_check
+
+    - name: Remind to install Downie via Setapp
+      when: not downie_check.stat.exists
+      ansible.builtin.debug:
+        msg: "Downie is not installed. Install it via Setapp for video downloads."

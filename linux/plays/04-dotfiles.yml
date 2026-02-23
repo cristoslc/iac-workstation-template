@@ -1,0 +1,8 @@
+---
+- name: "Phase 4: Dotfile management"
+  hosts: localhost
+  connection: local
+
+  roles:
+    - role: stow
+      tags: [stow, dotfiles]

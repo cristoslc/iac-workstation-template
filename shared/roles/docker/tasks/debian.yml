@@ -1,0 +1,114 @@
+---
+- name: Install Docker prerequisites
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+    state: present
+  become: true
+
+- name: Check if Docker keyring exists
+  ansible.builtin.stat:
+    path: /usr/share/keyrings/docker-archive-keyring.gpg
+  register: _docker_keyring
+
+- name: Install Docker GPG key
+  when: not _docker_keyring.stat.exists
+  block:
+    - name: Download Docker GPG key
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /tmp/docker-key.gpg
+        mode: "0644"
+      become: true
+
+    - name: Dearmor Docker GPG key
+      ansible.builtin.command: gpg --batch --yes --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg /tmp/docker-key.gpg
+      become: true
+
+    - name: Clean up Docker key temp file
+      ansible.builtin.file:
+        path: /tmp/docker-key.gpg
+        state: absent
+      become: true
+
+- name: Detect Ubuntu base codename
+  ansible.builtin.shell:
+    cmd: . /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}"
+  register: _ubuntu_codename
+  changed_when: false
+
+- name: Add Docker repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu {{ _ubuntu_codename.stdout }} stable"
+    filename: docker
+    state: present
+  become: true
+
+- name: Remove Docker Engine if present (replaced by Docker Desktop)
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-compose-plugin
+    state: absent
+    purge: true
+  become: true
+  register: _docker_engine_removed
+
+- name: Stop Docker Engine service before Desktop install
+  when: _docker_engine_removed.changed
+  ansible.builtin.systemd:
+    name: docker
+    state: stopped
+    enabled: false
+  become: true
+  failed_when: false
+
+- name: Check if Docker Desktop is installed
+  ansible.builtin.command: dpkg-query -W docker-desktop
+  register: _docker_desktop_check
+  changed_when: false
+  failed_when: false
+
+- name: Download and install Docker Desktop
+  when: _docker_desktop_check.rc != 0
+  block:
+    - name: Create temp file for Docker Desktop download
+      ansible.builtin.tempfile:
+        suffix: .deb
+      register: _docker_desktop_tmp
+
+    - name: Download Docker Desktop .deb
+      ansible.builtin.get_url:
+        url: https://desktop.docker.com/linux/main/amd64/docker-desktop-amd64.deb
+        dest: "{{ _docker_desktop_tmp.path }}"
+        mode: "0644"
+        force: true
+
+    - name: Verify Docker Desktop .deb is not truncated
+      ansible.builtin.stat:
+        path: "{{ _docker_desktop_tmp.path }}"
+      register: _docker_desktop_stat
+      failed_when: _docker_desktop_stat.stat.size < 100000000
+
+    - name: Install Docker Desktop .deb
+      ansible.builtin.apt:
+        deb: "{{ _docker_desktop_tmp.path }}"
+        state: present
+        update_cache: true
+      become: true
+
+    - name: Clean up Docker Desktop temp file
+      ansible.builtin.file:
+        path: "{{ _docker_desktop_tmp.path }}"
+        state: absent
+
+- name: Add user to docker group
+  ansible.builtin.user:
+    name: "{{ ansible_facts.user_id }}"
+    groups: docker
+    append: true
+  become: true

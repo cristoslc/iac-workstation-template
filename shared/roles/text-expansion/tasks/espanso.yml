@@ -1,0 +1,74 @@
+---
+# Espanso sub-task
+- name: Install Espanso (macOS)
+  when: ansible_facts.os_family == "Darwin"
+  block:
+    - name: Install Espanso via Homebrew
+      community.general.homebrew_cask:
+        name: espanso
+        state: present
+
+    - name: Note about Espanso accessibility
+      ansible.builtin.debug:
+        msg: >
+          Espanso requires accessibility permissions on macOS.
+          Grant access in System Settings → Privacy & Security → Accessibility.
+
+- name: Install Espanso (Debian)
+  when: ansible_facts.os_family == "Debian"
+  block:
+    - name: Check if Espanso is installed
+      ansible.builtin.command: dpkg-query -W -f='${Status}' espanso
+      register: espanso_check
+      changed_when: false
+      failed_when: false
+
+    - name: Install Espanso
+      when: "'install ok installed' not in espanso_check.stdout"
+      block:
+        - name: Download Espanso .deb
+          ansible.builtin.get_url:
+            url: "https://github.com/espanso/espanso/releases/latest/download/espanso-debian-x11-amd64.deb"
+            dest: /tmp/espanso.deb
+            mode: "0644"
+
+        - name: Install Espanso .deb
+          ansible.builtin.apt:
+            deb: /tmp/espanso.deb
+            state: present
+          become: true
+
+        - name: Clean up .deb
+          ansible.builtin.file:
+            path: /tmp/espanso.deb
+            state: absent
+
+    - name: Check if Espanso systemd service exists
+      ansible.builtin.stat:
+        path: "{{ ansible_facts.env.HOME }}/.config/systemd/user/espanso.service"
+      register: _espanso_service_file
+
+    - name: Register Espanso systemd service
+      ansible.builtin.command: espanso service register
+      when: not _espanso_service_file.stat.exists
+      changed_when: true
+
+    - name: Check if Espanso process is running
+      ansible.builtin.command: pgrep -x espanso
+      register: _espanso_process
+      changed_when: false
+      failed_when: false
+
+    - name: Start Espanso service
+      ansible.builtin.command: espanso service start
+      register: _espanso_start
+      when: _espanso_process.rc != 0
+      changed_when: _espanso_start.rc == 0
+      failed_when: false
+
+    - name: Warn if Espanso failed to start
+      ansible.builtin.debug:
+        msg: >-
+          Espanso service failed to start (rc={{ _espanso_start.rc }}).
+          Complete the Espanso setup wizard first, then run 'espanso service start'.
+      when: _espanso_start.rc is defined and _espanso_start.rc != 0

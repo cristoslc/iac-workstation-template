@@ -1,0 +1,4 @@
+---
+# Stow configuration
+# bootstrap_mode is set by the wizard: fresh, new_account, existing_account
+bootstrap_mode: fresh

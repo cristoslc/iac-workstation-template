@@ -1,0 +1,13 @@
+---
+extends: relaxed
+
+ignore:
+  - "**/*.sops.*"
+  - "**/.decrypted/"
+  # Ansible Galaxy collections managed externally.
+  - "**/collections/"
+
+rules:
+  line-length:
+    max: 200
+    allow-non-breakable-inline-mappings: true

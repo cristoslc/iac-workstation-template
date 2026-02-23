@@ -1,0 +1,28 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+!.env.template
+
+# Private keys & certificates
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Credential files
+credentials.json
+service-account*.json
+.npmrc
+.netrc

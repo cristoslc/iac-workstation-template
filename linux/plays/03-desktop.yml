@@ -1,0 +1,50 @@
+---
+- name: "Phase 3: Desktop environment"
+  hosts: localhost
+  connection: local
+
+  roles:
+    - role: browsers
+      tags: [browsers, firefox, brave, chrome, desktop]
+
+    - role: launchers
+      tags: [launchers, vicinae, desktop]
+
+    - role: text-expansion
+      tags: [text-expansion, espanso, desktop]
+
+    - role: calendar
+      tags: [calendar, desktop]
+
+    - role: communication
+      tags: [communication, slack, signal, desktop]
+
+    - role: media
+      tags: [media, spotify, vlc, desktop]
+
+    - role: vpn
+      tags: [vpn, tailscale, surfshark, desktop]
+
+    - role: backups
+      tags: [backups, timeshift, desktop]
+
+    - role: screenshots
+      tags: [screenshots, desktop]
+
+    - role: link-handler
+      tags: [link-handler, xdg-mime, desktop]
+
+    - role: stream-deck
+      tags: [stream-deck, opendeck, desktop]
+
+    - role: utilities
+      tags: [utilities, desktop]
+
+    - role: file-transfer
+      tags: [file-transfer, filezilla, desktop]
+
+    - role: desktop-env
+      tags: [desktop-env, cinnamon, desktop]
+
+    - role: dev
+      tags: [dev, desktop]

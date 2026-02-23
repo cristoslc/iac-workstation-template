@@ -1,0 +1,42 @@
+---
+# Linux: OpenDeck — Stream Deck companion with Elgato plugin SDK support.
+# Installs from .deb with version pinning and checksum verification.
+
+- name: OpenDeck version check
+  ansible.builtin.include_tasks: "{{ workstation_dir }}/shared/tasks/version-check.yml"
+  vars:
+    tool_name: OpenDeck
+    tool_repo: nekename/OpenDeck
+    pinned_version: "{{ opendeck_version }}"
+
+- name: Check installed OpenDeck version
+  ansible.builtin.command: dpkg-query -W -f='${Version}' opendeck
+  register: _opendeck_installed
+  changed_when: false
+  failed_when: false
+
+- name: Install OpenDeck
+  when: _opendeck_installed.rc != 0 or opendeck_version not in _opendeck_installed.stdout
+  block:
+    - name: Download and verify OpenDeck .deb
+      ansible.builtin.include_tasks: "{{ workstation_dir }}/shared/tasks/download-and-verify.yml"
+      vars:
+        tool_name: OpenDeck
+        download_url: "{{ opendeck_url }}"
+        expected_sha256: "{{ opendeck_sha256 }}"
+
+    - name: Install OpenDeck .deb
+      ansible.builtin.apt:
+        deb: "{{ _verified_download.path }}"
+        state: present
+      become: true
+
+    - name: Clean up OpenDeck download
+      ansible.builtin.file:
+        path: "{{ _verified_download.path }}"
+        state: absent
+
+- name: Ensure udev rules are loaded for Stream Deck USB access
+  ansible.builtin.command: udevadm control --reload-rules
+  become: true
+  changed_when: false

@@ -1,0 +1,29 @@
+---
+# Browsers role: Firefox, Brave, Chrome + daily driver default
+
+- name: Install Firefox
+  ansible.builtin.include_tasks: firefox.yml
+  tags: [firefox]
+
+- name: Install Brave
+  ansible.builtin.include_tasks: brave.yml
+  tags: [brave]
+
+- name: Install Chrome
+  ansible.builtin.include_tasks: chrome.yml
+  tags: [chrome]
+
+- name: Set daily driver browser (Linux)
+  when: ansible_facts.os_family == "Debian"
+  ansible.builtin.command: >
+    xdg-settings set default-web-browser
+    {{ (browsers | selectattr('name', 'equalto', daily_driver_browser) | first).linux_desktop }}
+  changed_when: false
+  failed_when: false
+
+- name: Note about daily driver browser (macOS)
+  when: ansible_facts.os_family == "Darwin"
+  ansible.builtin.debug:
+    msg: >
+      Daily driver browser is {{ daily_driver_browser }}.
+      Set it as default manually in System Settings → Default web browser.

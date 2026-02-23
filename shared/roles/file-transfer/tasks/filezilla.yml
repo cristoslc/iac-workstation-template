@@ -1,0 +1,8 @@
+---
+# Filezilla sub-task (Debian only)
+- name: Install Filezilla (Debian)
+  when: ansible_facts.os_family == "Debian"
+  ansible.builtin.apt:
+    name: filezilla
+    state: present
+  become: true

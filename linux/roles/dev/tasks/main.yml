@@ -1,0 +1,13 @@
+---
+- name: Install Linux development packages
+  ansible.builtin.apt:
+    name:
+      - gcc
+      - g++
+      - make
+      - pkg-config
+      - linux-headers-generic
+      - libssl-dev
+      - libffi-dev
+    state: present
+  become: true

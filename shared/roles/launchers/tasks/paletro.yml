@@ -1,0 +1,14 @@
+---
+# Paletro sub-task (macOS only — Setapp-managed)
+- name: Install Paletro (macOS)
+  when: ansible_facts.os_family == "Darwin"
+  block:
+    - name: Check if Paletro is installed
+      ansible.builtin.stat:
+        path: /Applications/Setapp/Paletro.app
+      register: paletro_check
+
+    - name: Remind to install Paletro via Setapp
+      when: not paletro_check.stat.exists
+      ansible.builtin.debug:
+        msg: "Paletro is not installed. Install it via Setapp for app command palette."

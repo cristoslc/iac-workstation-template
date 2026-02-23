@@ -1,0 +1,22 @@
+---
+# VLC sub-task
+- name: Install VLC (macOS)
+  when: ansible_facts.os_family == "Darwin"
+  block:
+    - name: Verify VLC is installed
+      ansible.builtin.command: brew list --cask vlc
+      register: vlc_check
+      changed_when: false
+      failed_when: false
+
+    - name: Note about VLC
+      when: vlc_check.rc != 0
+      ansible.builtin.debug:
+        msg: "VLC not installed. Add 'vlc' to Brewfile and run brew bundle."
+
+- name: Install VLC (Debian)
+  when: ansible_facts.os_family == "Debian"
+  ansible.builtin.apt:
+    name: vlc
+    state: present
+  become: true

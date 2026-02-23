@@ -1,0 +1,54 @@
+---
+# Reusable task: check if a newer version is available on GitHub.
+# Warns if the pinned version is behind latest. Runs before install.
+#
+# Required vars:
+#   tool_name:       Human-readable name (e.g. "lazygit")
+#   tool_repo:       GitHub repo (e.g. "jesseduffield/lazygit")
+#   pinned_version:  Currently pinned version string (e.g. "0.59.0")
+#
+# Optional env:
+#   GITHUB_TOKEN:    Personal access token — raises rate limit from 60 to 5000/hr.
+#
+# Requires: skip_version_check (from role defaults, default false)
+
+- name: "{{ tool_name }} — check for newer version on GitHub"
+  when: not (skip_version_check | default(false) | bool)
+  block:
+    - name: "{{ tool_name }} — build GitHub API headers"
+      ansible.builtin.set_fact:
+        _gh_headers: >-
+          {{
+            {'Accept': 'application/vnd.github.v3+json'}
+            | combine(
+                {'Authorization': 'Bearer ' + lookup('env', 'GITHUB_TOKEN')}
+                if lookup('env', 'GITHUB_TOKEN') | length > 0
+                else {}
+              )
+          }}
+      no_log: true
+
+    - name: "{{ tool_name }} — query latest GitHub release"
+      ansible.builtin.uri:
+        url: "https://api.github.com/repos/{{ tool_repo }}/releases/latest"
+        return_content: true
+        headers: "{{ _gh_headers }}"
+      register: _gh_latest
+      failed_when: false
+      changed_when: false
+      no_log: true
+
+    - name: "{{ tool_name }} — extract latest version"
+      when: _gh_latest.status == 200
+      ansible.builtin.set_fact:
+        _latest_version: "{{ _gh_latest.json.tag_name | regex_replace('^v', '') }}"
+
+    - name: "{{ tool_name }} — warn if pinned version is outdated"
+      when:
+        - _gh_latest.status == 200
+        - _latest_version != pinned_version
+      ansible.builtin.debug:
+        msg: >
+          UPDATE AVAILABLE: {{ tool_name }} pinned at v{{ pinned_version }},
+          latest is v{{ _latest_version }}.
+          Update the version and checksum in the role defaults to upgrade.

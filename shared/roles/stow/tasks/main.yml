@@ -1,0 +1,57 @@
+---
+# Stow role: single owner of ALL stow operations.
+# Handles backup of pre-existing files, shared → secrets → platform overlay ordering.
+
+- name: Include OS-specific tasks
+  ansible.builtin.include_tasks: "{{ ansible_facts.os_family | lower }}.yml"
+
+- name: Create backup directory for pre-existing files
+  ansible.builtin.file:
+    path: "{{ backup_dir }}"
+    state: directory
+    mode: "0700"
+  vars:
+    backup_dir: "{{ ansible_facts.env.HOME }}/.workstation-backup/{{ ansible_facts.date_time.iso8601_basic_short }}"
+
+- name: Backup and migrate pre-existing dotfiles
+  ansible.builtin.include_tasks: backup-existing.yml
+
+- name: Ensure SSH directories exist with restrictive permissions
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ ansible_facts.user_id }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - { path: "{{ ansible_facts.env.HOME }}/.ssh", mode: "0700" }
+    - { path: "{{ ansible_facts.env.HOME }}/.ssh/config.d", mode: "0700" }
+  loop_control:
+    label: "{{ item.path }}"
+
+- name: Stow shared dotfiles
+  ansible.builtin.include_tasks: stow-packages.yml
+  vars:
+    stow_dir: "{{ workstation_dir }}/shared/dotfiles"
+    stow_label: "shared"
+
+- name: Stow decrypted shared secret dotfiles
+  ansible.builtin.include_tasks: stow-packages.yml
+  vars:
+    stow_dir: "{{ workstation_dir }}/shared/secrets/.decrypted/dotfiles"
+    stow_label: "shared secrets"
+  when: >
+    lookup('pipe', 'ls ' + workstation_dir + '/shared/secrets/.decrypted/dotfiles/ 2>/dev/null || true') | length > 0
+
+- name: Stow platform dotfiles
+  ansible.builtin.include_tasks: stow-packages.yml
+  vars:
+    stow_dir: "{{ workstation_dir }}/{{ platform_dir }}/dotfiles"
+    stow_label: "{{ platform }}"
+
+- name: Stow decrypted platform secret dotfiles
+  ansible.builtin.include_tasks: stow-packages.yml
+  vars:
+    stow_dir: "{{ workstation_dir }}/{{ platform_dir }}/secrets/.decrypted/dotfiles"
+    stow_label: "{{ platform }} secrets"
+  when: >
+    lookup('pipe', 'ls ' + workstation_dir + '/' + platform_dir + '/secrets/.decrypted/dotfiles/ 2>/dev/null || true') | length > 0
