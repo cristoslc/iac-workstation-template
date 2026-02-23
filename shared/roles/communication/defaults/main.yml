@@ -1,8 +1,3 @@
 ---
-# Pinned versions and SHA-256 checksums for communication tools (Linux).
-# Update checksums when bumping versions:
-#   curl -fsSL <url> | sha256sum
-
-slack_version: "4.41.105"
-slack_url: "https://downloads.slack-edge.com/desktop-releases/linux/x64/{{ slack_version }}/slack-desktop-{{ slack_version }}-amd64.deb"
-slack_sha256: "47696e49067a427e2db9b25157519abe1f61711c61050756d3c6b1232687803d"
+# Defaults for communication role.
+# Slack uses API-driven latest download — no version pin needed.

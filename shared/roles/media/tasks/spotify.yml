@@ -17,41 +17,61 @@
 - name: Install Spotify (Debian)
   when: ansible_facts.os_family == "Debian"
   block:
-    - name: Check if Spotify keyring exists
-      ansible.builtin.stat:
+    # Clean up old apt-based Spotify install if migrating to Flatpak.
+    - name: Remove apt-installed Spotify if present
+      ansible.builtin.apt:
+        name: spotify-client
+        state: absent
+      become: true
+
+    - name: Remove old Spotify apt source
+      ansible.builtin.file:
+        path: /etc/apt/sources.list.d/spotify.list
+        state: absent
+      become: true
+
+    - name: Remove old Spotify keyring
+      ansible.builtin.file:
         path: /usr/share/keyrings/spotify-archive-keyring.gpg
-      register: _spotify_keyring
+        state: absent
+      become: true
 
-    - name: Install Spotify GPG key
-      when: not _spotify_keyring.stat.exists
-      block:
-        - name: Download Spotify GPG key
-          ansible.builtin.get_url:
-            url: https://download.spotify.com/debian/pubkey_5384CE82BA52C83A.asc
-            dest: /tmp/spotify-key.asc
-            mode: "0644"
-          become: true
+    - name: Find stale Spotify keys in trusted.gpg.d
+      ansible.builtin.find:
+        paths: /etc/apt/trusted.gpg.d
+        patterns: "spotify-*.gpg"
+      register: _spotify_stale_keys
 
-        - name: Dearmor Spotify GPG key
-          ansible.builtin.command: gpg --batch --yes --dearmor -o /usr/share/keyrings/spotify-archive-keyring.gpg /tmp/spotify-key.asc
-          become: true
+    - name: Remove stale Spotify keys from trusted.gpg.d
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ _spotify_stale_keys.files }}"
+      loop_control:
+        label: "{{ item.path }}"
+      become: true
+      when: _spotify_stale_keys.files | length > 0
 
-        - name: Clean up Spotify key temp file
-          ansible.builtin.file:
-            path: /tmp/spotify-key.asc
-            state: absent
-          become: true
-
-    - name: Add Spotify apt repository
-      ansible.builtin.apt_repository:
-        repo: "deb [signed-by=/usr/share/keyrings/spotify-archive-keyring.gpg] https://repository.spotify.com stable non-free"
-        filename: spotify
+    # Flatpak + Flathub are pre-installed on Linux Mint; ensure they
+    # exist on other Debian-based systems.
+    - name: Ensure Flatpak is installed
+      ansible.builtin.apt:
+        name: flatpak
         state: present
       become: true
 
-    - name: Install Spotify
-      ansible.builtin.apt:
-        name: spotify-client
-        state: present
-        update_cache: true
+    - name: Ensure Flathub remote is configured
+      ansible.builtin.command: flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+      changed_when: false
+      become: true
+
+    - name: Check if Spotify Flatpak is installed
+      ansible.builtin.command: flatpak info com.spotify.Client
+      register: _spotify_flatpak
+      changed_when: false
+      failed_when: false
+
+    - name: Install Spotify via Flatpak
+      ansible.builtin.command: flatpak install -y flathub com.spotify.Client
+      when: _spotify_flatpak.rc != 0
       become: true

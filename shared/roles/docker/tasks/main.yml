@@ -1,3 +1,14 @@
 ---
 - name: Include OS-specific tasks
   ansible.builtin.include_tasks: "{{ ansible_facts.os_family | lower }}.yml"
+
+- name: Configure Docker log rotation
+  ansible.builtin.include_tasks: log-rotation.yml
+
+- name: Configure Docker credential store
+  ansible.builtin.include_tasks: credential-store.yml
+  when: ansible_facts.os_family != 'Darwin'
+
+- name: Configure Docker Desktop auto-update
+  ansible.builtin.include_tasks: desktop-update.yml
+  when: ansible_facts.os_family != 'Darwin'

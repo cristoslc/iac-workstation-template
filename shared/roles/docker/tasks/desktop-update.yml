@@ -1,0 +1,49 @@
+---
+# Systemd user timer for Docker Desktop auto-update (Linux only).
+
+- name: Ensure systemd user directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.config/systemd/user"
+    state: directory
+    mode: "0755"
+
+- name: Deploy docker-desktop-update systemd user service
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/.config/systemd/user/docker-desktop-update.service"
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Update Docker Desktop
+
+      [Service]
+      Type=oneshot
+      ExecStart=/usr/bin/docker desktop update --quiet
+      TimeoutStartSec=300
+  register: _dd_update_service
+
+- name: Deploy docker-desktop-update systemd user timer
+  ansible.builtin.copy:
+    dest: "{{ ansible_env.HOME }}/.config/systemd/user/docker-desktop-update.timer"
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Daily Docker Desktop update check
+
+      [Timer]
+      OnCalendar=daily
+      RandomizedDelaySec=3600
+      Persistent=true
+
+      [Install]
+      WantedBy=timers.target
+  register: _dd_update_timer
+
+- name: Enable and start docker-desktop-update timer
+  ansible.builtin.systemd:
+    name: docker-desktop-update.timer
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: "{{ _dd_update_service.changed or _dd_update_timer.changed }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ ansible_facts.user_uid }}"

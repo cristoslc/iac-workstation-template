@@ -17,34 +17,39 @@
 - name: Install Slack (Debian)
   when: ansible_facts.os_family == "Debian"
   block:
-    - name: Check installed Slack version
-      ansible.builtin.command: dpkg-query -W -f='${Version}' slack-desktop
-      register: slack_installed
+    - name: Check if Slack is already installed
+      ansible.builtin.command: dpkg-query -W slack-desktop
+      register: _slack_installed
       changed_when: false
       failed_when: false
 
-    - name: Download and install Slack
-      when: slack_installed.rc != 0 or slack_installed.stdout != slack_version
+    - name: Install Slack from latest .deb
+      when: _slack_installed.rc != 0
       block:
+        - name: Query Slack API for latest release URL
+          ansible.builtin.uri:
+            url: "https://slack.com/api/desktop.latestRelease?variant=deb&arch=x64"
+            return_content: true
+          register: _slack_api
+
         - name: Create temp file for Slack download
           ansible.builtin.tempfile:
             suffix: .deb
-          register: slack_tmp
+          register: _slack_tmp
 
-        - name: Download Slack .deb
+        - name: Download latest Slack .deb
           ansible.builtin.get_url:
-            url: "{{ slack_url }}"
-            dest: "{{ slack_tmp.path }}"
-            checksum: "sha256:{{ slack_sha256 }}"
+            url: "{{ _slack_api.json.url }}"
+            dest: "{{ _slack_tmp.path }}"
             mode: "0644"
 
         - name: Install Slack .deb
           ansible.builtin.apt:
-            deb: "{{ slack_tmp.path }}"
+            deb: "{{ _slack_tmp.path }}"
             state: present
           become: true
 
         - name: Clean up Slack temp file
           ansible.builtin.file:
-            path: "{{ slack_tmp.path }}"
+            path: "{{ _slack_tmp.path }}"
             state: absent

@@ -9,37 +9,8 @@
         that: ansible_facts.os_family == "Debian"
         fail_msg: "This playbook is for Debian-based Linux only."
 
-    # Remove apt source entries that reference repos whose Signed-By
-    # values conflict. ansible.builtin.find with `contains` missed these
-    # (possibly in /etc/apt/sources.list or files without .list/.sources
-    # extensions), so we use grep -rl to search ALL files under /etc/apt/.
-    - name: Remove conflicting VS Code apt sources
-      ansible.builtin.shell: |
-        set -euo pipefail
-        found=0
-        # Remove any file in sources.list.d containing the VS Code repo URL,
-        # EXCEPT the one we manage (vscode.list / vscode.sources).
-        for f in $(grep -rl 'packages\.microsoft\.com/repos/code' /etc/apt/sources.list.d/ 2>/dev/null || true); do
-          case "$(basename "$f")" in
-            vscode.list|vscode.sources) continue ;;
-          esac
-          echo "Removing $f"
-          rm -f "$f"
-          found=1
-        done
-        # Also strip matching lines from /etc/apt/sources.list itself
-        if grep -q 'packages\.microsoft\.com/repos/code' /etc/apt/sources.list 2>/dev/null; then
-          echo "Cleaning /etc/apt/sources.list"
-          sed -i '/packages\.microsoft\.com\/repos\/code/d' /etc/apt/sources.list
-          found=1
-        fi
-        [ "$found" -eq 1 ] && echo "CHANGED" || echo "OK"
-      args:
-        executable: /bin/bash
-      register: _vscode_cleanup
-      changed_when: "'CHANGED' in _vscode_cleanup.stdout"
-      become: true
-
+    # 1Password's post-install can create conflicting apt source files.
+    # We manage 1password.list with signed-by=, so remove any others.
     - name: Remove conflicting 1Password apt sources
       ansible.builtin.shell: |
         set -euo pipefail
@@ -62,6 +33,40 @@
         executable: /bin/bash
       register: _1password_cleanup
       changed_when: "'CHANGED' in _1password_cleanup.stdout"
+      become: true
+
+    # Remove old Ansible-managed apt sources whose filenames differ from
+    # what vendor post-install scripts create. Chrome (google-chrome.list)
+    # and VS Code (vscode.list / vscode.sources) reuse the same filenames
+    # and keys as their vendor scripts, so we leave them alone.
+    - name: Remove Ansible-managed apt sources superseded by vendor repos
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/apt/sources.list.d/steam.list
+        - /etc/apt/sources.list.d/cli_github_com_packages.list
+      become: true
+
+    - name: Remove expired packagecloud GPG key
+      ansible.builtin.file:
+        path: /etc/apt/trusted.gpg.d/packagecloud.gpg
+        state: absent
+      become: true
+
+    # google-chrome-keyring.gpg is referenced by Chrome's signed-by=
+    # source. microsoft.gpg is VS Code's canonical vendor key
+    # (written by its postinst). Neither is an orphan — leave them.
+    - name: Remove orphan GPG keys
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/apt/trusted.gpg.d/brave-browser-release.gpg
+        - /usr/share/keyrings/brave-browser-beta-archive-keyring.gpg
+        - /usr/share/keyrings/brave-browser-nightly-archive-keyring.gpg
+        - /usr/share/keyrings/microsoft-archive-keyring.gpg
+        - /etc/apt/trusted.gpg.d/linuxmint.key.asc
       become: true
 
   roles:

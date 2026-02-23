@@ -1,0 +1,57 @@
+---
+# Steam sub-task
+- name: Install Steam (macOS)
+  when: ansible_facts.os_family == "Darwin"
+  block:
+    - name: Verify Steam is installed
+      ansible.builtin.command: brew list --cask steam
+      register: steam_check
+      changed_when: false
+      failed_when: false
+
+    - name: Note about Steam
+      when: steam_check.rc != 0
+      ansible.builtin.debug:
+        msg: "Steam not installed. Add 'steam' to Brewfile and run brew bundle."
+
+# Steam's .deb post-install enables i386, installs GPG keys, and
+# creates its own apt sources (steam-stable.list, steam-beta.list)
+# for future updates. No need to manage the repo ourselves.
+- name: Install Steam (Debian)
+  when: ansible_facts.os_family == "Debian"
+  block:
+    - name: Check if Steam is already installed
+      ansible.builtin.command: dpkg-query -W steam-launcher
+      register: _steam_installed
+      changed_when: false
+      failed_when: false
+
+    - name: Install Steam from latest .deb
+      when: _steam_installed.rc != 0
+      block:
+        - name: Enable i386 architecture for Steam
+          ansible.builtin.command: dpkg --add-architecture i386
+          changed_when: false
+          become: true
+
+        - name: Create temp file for Steam download
+          ansible.builtin.tempfile:
+            suffix: .deb
+          register: _steam_tmp
+
+        - name: Download latest Steam .deb
+          ansible.builtin.get_url:
+            url: https://repo.steampowered.com/steam/archive/precise/steam_latest.deb
+            dest: "{{ _steam_tmp.path }}"
+            mode: "0644"
+
+        - name: Install Steam .deb
+          ansible.builtin.apt:
+            deb: "{{ _steam_tmp.path }}"
+            state: present
+          become: true
+
+        - name: Clean up Steam temp file
+          ansible.builtin.file:
+            path: "{{ _steam_tmp.path }}"
+            state: absent

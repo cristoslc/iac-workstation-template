@@ -58,7 +58,7 @@ apply: ## Apply a specific role: make apply ROLE=git (or ROLE=gh for sub-task)
 ifndef ROLE
 	$(error ROLE is required. Usage: make apply ROLE=git)
 endif
-	cd $(PLATFORM_DIR) && ansible-playbook site.yml --tags $(ROLE) --ask-become-pass
+	./scripts/apply-role.sh $(PLATFORM_DIR) $(ROLE)
 
 decrypt: ## Decrypt all SOPS files to .decrypted/ dirs
 	@echo "Decrypting shared secrets..."

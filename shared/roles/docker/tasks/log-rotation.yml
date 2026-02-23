@@ -1,0 +1,38 @@
+---
+- name: Set daemon.json path
+  ansible.builtin.set_fact:
+    _daemon_json_path: "{{ '/etc/docker/daemon.json' if ansible_facts.os_family != 'Darwin' else ansible_env.HOME ~ '/.docker/daemon.json' }}"
+
+- name: Ensure daemon.json parent directory exists
+  ansible.builtin.file:
+    path: "{{ _daemon_json_path | dirname }}"
+    state: directory
+    mode: "0755"
+  become: "{{ ansible_facts.os_family != 'Darwin' }}"
+
+- name: Read existing daemon.json
+  ansible.builtin.slurp:
+    src: "{{ _daemon_json_path }}"
+  register: _daemon_json_raw
+  become: "{{ ansible_facts.os_family != 'Darwin' }}"
+  failed_when: false
+
+- name: Build merged daemon config
+  vars:
+    _existing: "{{ _daemon_json_raw.content | default('e30=') | b64decode | from_json }}"
+    _log_rotation:
+      log-driver: json-file
+      log-opts:
+        max-size: "100m"
+        max-file: "3"
+  ansible.builtin.set_fact:
+    _daemon_json_existing: "{{ _existing }}"
+    _daemon_json_merged: "{{ _existing | combine(_log_rotation, recursive=True) }}"
+
+- name: Write daemon.json with log rotation
+  ansible.builtin.copy:
+    content: "{{ _daemon_json_merged | to_nice_json }}\n"
+    dest: "{{ _daemon_json_path }}"
+    mode: "0644"
+  become: "{{ ansible_facts.os_family != 'Darwin' }}"
+  when: _daemon_json_merged != _daemon_json_existing

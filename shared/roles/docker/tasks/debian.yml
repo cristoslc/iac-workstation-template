@@ -46,36 +46,36 @@
     state: present
   become: true
 
-- name: Remove Docker Engine if present (replaced by Docker Desktop)
-  ansible.builtin.apt:
-    name:
-      - docker-ce
-      - docker-ce-cli
-      - containerd.io
-      - docker-compose-plugin
-    state: absent
-    purge: true
-  become: true
-  register: _docker_engine_removed
-
-- name: Stop Docker Engine service before Desktop install
-  when: _docker_engine_removed.changed
-  ansible.builtin.systemd:
-    name: docker
-    state: stopped
-    enabled: false
-  become: true
-  failed_when: false
-
 - name: Check if Docker Desktop is installed
   ansible.builtin.command: dpkg-query -W docker-desktop
   register: _docker_desktop_check
   changed_when: false
   failed_when: false
 
-- name: Download and install Docker Desktop
+- name: Replace Docker Engine with Desktop
   when: _docker_desktop_check.rc != 0
   block:
+    - name: Remove Docker Engine if present
+      ansible.builtin.apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: absent
+        purge: true
+      become: true
+      register: _docker_engine_removed
+
+    - name: Stop Docker Engine service before Desktop install
+      when: _docker_engine_removed.changed
+      ansible.builtin.systemd:
+        name: docker
+        state: stopped
+        enabled: false
+      become: true
+      failed_when: false
+
     - name: Create temp file for Docker Desktop download
       ansible.builtin.tempfile:
         suffix: .deb

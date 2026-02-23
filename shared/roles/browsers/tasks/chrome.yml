@@ -14,44 +14,53 @@
       ansible.builtin.debug:
         msg: "Chrome not installed. Add 'google-chrome' to Brewfile and run brew bundle."
 
+# Chrome's .deb post-install creates its own apt repo and GPG key
+# for future updates. No need to manage the repo ourselves.
 - name: Install Chrome (Debian)
   when: ansible_facts.os_family == "Debian"
   block:
-    - name: Check if Chrome keyring exists
-      ansible.builtin.stat:
-        path: /usr/share/keyrings/google-chrome-keyring.gpg
-      register: _chrome_keyring
+    - name: Check if Chrome is already installed
+      ansible.builtin.command: dpkg-query -W google-chrome-stable
+      register: _chrome_installed
+      changed_when: false
+      failed_when: false
 
-    - name: Install Google Chrome GPG key
-      when: not _chrome_keyring.stat.exists
+    - name: Install Chrome from latest .deb
+      when: _chrome_installed.rc != 0
       block:
-        - name: Download Google Chrome GPG key
+        - name: Create temp file for Chrome download
+          ansible.builtin.tempfile:
+            suffix: .deb
+          register: _chrome_tmp
+
+        - name: Download latest Chrome .deb
           ansible.builtin.get_url:
-            url: https://dl.google.com/linux/linux_signing_key.pub
-            dest: /tmp/google-chrome-key.pub
+            url: https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+            dest: "{{ _chrome_tmp.path }}"
             mode: "0644"
+
+        - name: Install Chrome .deb
+          ansible.builtin.apt:
+            deb: "{{ _chrome_tmp.path }}"
+            state: present
           become: true
 
-        - name: Dearmor Google Chrome GPG key
-          ansible.builtin.command: gpg --batch --yes --dearmor -o /usr/share/keyrings/google-chrome-keyring.gpg /tmp/google-chrome-key.pub
-          become: true
-
-        - name: Clean up Chrome key temp file
+        - name: Clean up Chrome temp file
           ansible.builtin.file:
-            path: /tmp/google-chrome-key.pub
+            path: "{{ _chrome_tmp.path }}"
             state: absent
-          become: true
 
-    - name: Add Google Chrome apt repository
-      ansible.builtin.apt_repository:
-        repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] https://dl.google.com/linux/chrome/deb/ stable main"
-        filename: google-chrome
-        state: present
-      become: true
+    # Recover vendor apt source if missing (e.g. after a previous
+    # cleanup deleted it). Re-running postinst restores source + key.
+    - name: Check if Chrome apt source exists
+      ansible.builtin.stat:
+        path: /etc/apt/sources.list.d/google-chrome.list
+      register: _chrome_source
+      when: _chrome_installed.rc == 0
 
-    - name: Install Google Chrome
-      ansible.builtin.apt:
-        name: google-chrome-stable
-        state: present
-        update_cache: true
+    - name: Restore Chrome vendor apt repo
+      ansible.builtin.command: /var/lib/dpkg/info/google-chrome-stable.postinst configure
+      when:
+        - _chrome_installed.rc == 0
+        - not (_chrome_source.stat.exists | default(true))
       become: true

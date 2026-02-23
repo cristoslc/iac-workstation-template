@@ -7,46 +7,57 @@
     name: visual-studio-code
     state: present
 
+# VS Code's .deb post-install creates its own apt repo and GPG key
+# for future updates. No need to manage the repo ourselves.
 - name: Install VS Code (Debian)
   when: ansible_facts.os_family == "Debian"
   block:
-    - name: Check if Microsoft keyring exists
-      ansible.builtin.stat:
-        path: /usr/share/keyrings/microsoft.gpg
-      register: _microsoft_keyring
+    - name: Check if VS Code is already installed
+      ansible.builtin.command: dpkg-query -W code
+      register: _vscode_installed
+      changed_when: false
+      failed_when: false
 
-    - name: Install Microsoft GPG key
-      when: not _microsoft_keyring.stat.exists
+    - name: Install VS Code from latest .deb
+      when: _vscode_installed.rc != 0
       block:
-        - name: Download Microsoft GPG key
+        - name: Create temp file for VS Code download
+          ansible.builtin.tempfile:
+            suffix: .deb
+          register: _vscode_tmp
+
+        - name: Download latest VS Code .deb
           ansible.builtin.get_url:
-            url: https://packages.microsoft.com/keys/microsoft.asc
-            dest: /tmp/microsoft-key.asc
+            url: https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64
+            dest: "{{ _vscode_tmp.path }}"
             mode: "0644"
+
+        - name: Install VS Code .deb
+          ansible.builtin.apt:
+            deb: "{{ _vscode_tmp.path }}"
+            state: present
           become: true
 
-        - name: Dearmor Microsoft GPG key
-          ansible.builtin.command: gpg --batch --yes --dearmor -o /usr/share/keyrings/microsoft.gpg /tmp/microsoft-key.asc
-          become: true
-
-        - name: Clean up Microsoft key temp file
+        - name: Clean up VS Code temp file
           ansible.builtin.file:
-            path: /tmp/microsoft-key.asc
+            path: "{{ _vscode_tmp.path }}"
             state: absent
-          become: true
 
-    - name: Add VS Code repository
-      ansible.builtin.apt_repository:
-        repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main"
-        filename: vscode
-        state: present
-      become: true
+    # Recover vendor apt source if missing (e.g. after a previous Phase 0
+    # cleanup deleted it). The postinst recreates vscode.sources + the
+    # GPG key at /usr/share/keyrings/microsoft.gpg.
+    - name: Check if VS Code has an apt source
+      ansible.builtin.shell: test -f /etc/apt/sources.list.d/vscode.sources -o -f /etc/apt/sources.list.d/vscode.list
+      register: _vscode_has_source
+      changed_when: false
+      failed_when: false
+      when: _vscode_installed.rc == 0
 
-    - name: Install VS Code
-      ansible.builtin.apt:
-        name: code
-        state: present
-        update_cache: true
+    - name: Restore VS Code vendor apt repo
+      ansible.builtin.command: /var/lib/dpkg/info/code.postinst configure
+      when:
+        - _vscode_installed.rc == 0
+        - _vscode_has_source.rc | default(0) != 0
       become: true
 
 - name: Install VS Code extensions
